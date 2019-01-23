@@ -1,0 +1,111 @@
+\documentclass{article}
+\input{../homework.sty}
+
+\title{Homework 1}
+\author{Austin Gill}
+
+\begin{document}
+\maketitle
+
+\todoinline{
+    Any comments applying to the whole homework?
+}
+
+\section{}\label{prob:1}
+
+\subsection{Statement}
+Compare the effectiveness of the text's hill climbing (two) and simulated annealing algorithms to
+find the max of
+\[ f(x) = 2^{-2{\left(\frac{(x - 0.1)}{0.9}\right)}^2}{\big(\sin(5\pi x)\big)}^6\]
+with $x\in [0,1]$. Use a real valued representation. Include a plot of the function with the
+location of the max and a plot of the estimate as a function of the iteration number. How sensitive
+are the algorithms to initial values?
+\subsection{Method}
+
+\begin{algorithm}[H]
+    \begin{algorithmic}
+        \State{$k=0$}
+        \State{Initialize $T$}
+        \State{Initialize $x$}
+        \State{Eval($x$)}
+        \While{$k < kmax$ and not done}
+        \State{$x'$ = $x$ + perturbation}
+        \State{Eval($x'$)}
+        \If{$rand(0,1) < e^{(Eval(x) - Eval(x'))/T}$}
+        \State{$x = x'$}
+        \EndIf{}
+        \State{$k++$}
+        \State{Update $T$}
+        \EndWhile{}
+    \end{algorithmic}
+    \caption{The simulated annealing algorithm}\label{alg:simulated-annealing}
+\end{algorithm}
+
+\todoinline{
+    Implement \autoref{alg:simulated-annealing} and plot results.
+}
+
+\subsection{Results}
+\todoinline{
+    \begin{itemize}
+        \item Plot the function.
+        \item Plot the estimate of the max as a function of the iteration number.
+        \item Examine the sensitivity to the initial values.
+    \end{itemize}
+}
+
+\section{}\label{prob:2}
+\subsection{Statement}
+In lecture we addressed the Traveling Salesman Problem using Simulated Annealing. To speed up
+convergence and increase the odds of finding the global extremal, it makes sense to try an
+evolutionary algorithm. The mutation operator can be adapted from the SA algorithm. Skip
+recombination in this problem. Write an evolutionary algorithm to solve the TSP as generated in the
+sample program. Compare deterministic and stochastic selection operators.
+
+\subsection{Method}
+\todoinline{
+    Outline the method(s) used to implement the selection operator.
+
+    Summarize the evolutionary algorithm.
+}
+\subsection{Experiments}
+\todoinline{
+    Write an evolutionary algorithm, and steal the mutation operator from the SA algorithm.
+
+    Compare deterministic and stochastic selection operators.
+}
+\subsubsection{Experiment 1}
+\subsubsection{Experiment 2}
+
+\subsection{Results}
+\todoinline{
+    Compare solutions
+
+    Compare selection operators
+}
+
+\section{}\label{prob:3}
+\subsection{Statement}
+In \autoref{prob:2} we implemented EA code to solve the Traveling Salesman Problem. In this
+problem, implement recombination (crossover) in your EA. For this problem you will need to use an
+encoding that prevents crossover that creates an invalid candidate. As before, compare
+deterministic and stochastic selection operators.
+
+\subsection{Method}
+\todoinline{
+    Implement crossover.
+
+    Find the right encoding for the problem?
+}
+
+\subsection{Experiments}
+
+\subsubsection{Experiment 1}
+\subsubsection{Experiment 2}
+
+\subsection{Results}
+\todoinline{
+    Compare selection operators.
+}
+
+\end{document}
