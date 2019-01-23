@@ -64,6 +64,8 @@
 % to properly modify the existing \Comment macro.
 % \algrenewcomment[1]{\hfill\eqparbox{COMMENT}{\textit{// #1}}}
 \algnewcommand{\IComment}[1]{\Comment{\textit{#1}}}
+% enable \autoref with algorithms
+\newcommand{\algorithmautorefname}{Algorithm}
 
 % TODO: Should this path be relative to the document root or this file?
 \graphicspath{{./figures/}}
