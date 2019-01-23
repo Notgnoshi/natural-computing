@@ -1,0 +1,82 @@
+\documentclass[12pt]{article}
+\input{../homework.sty}
+
+
+\title{Homework \#1}
+\author{Big Bird}
+
+
+\begin{document}
+\maketitle
+
+Pre-problem text.  The preface to the homework.  Comments which apply to the homework overall.
+
+\section{} %%  This will generate a numbered problem header.
+
+\subsection{Statement}
+This is the problem statement.
+
+Compare the effectiveness of the text's hill climbing (two) and simulated annealing algorithms to
+find the max of
+\[ f(x)=2^{-2((x-0.1)/0.9)^2}(\sin(5\pi x))^6 \quad
+\mbox{with} \quad x\in [0,1]\]
+
+Use a real valued representation.  Include a plot of the function with the location of the max and
+a plot of the estimate as a function of the iteration number.	How sensitive are the algorithms to
+initial values?
+\subsection{Method}
+Solution method here.
+
+Example of code listing
+\begin{minted}{python}
+def main(cities, cities_number, temperature = 800, cooling_factor = .001):
+    current = evaluate(cities)
+    i = 0
+    while temperature > 0.001:
+        new_solution = swap(cities)
+        energy = evaluate(new_solution)
+        if accept_solution(current, energy, temperature):
+            cities = new_solution
+            current = energy
+
+        temperature *= 1 - cooling_factor
+        if (i%50==0):  plot(cities,path = 1, wait = 0)
+        i = i+1
+    return cities, i
+\end{minted}
+
+Example of Algorithm:
+
+\begin{algorithm}[H]
+    \begin{algorithmic}
+        \State{$k=0$}
+        \State{Initialize $T$}
+        \State{Initialize $x$}
+        \State{Eval($x$)}
+        \While{$k < kmax$ and not done}
+        \State{$x'$ = $x$ + perturbation}
+        \State{Eval($x'$)}
+        \If{$rand(0,1) < e^{(Eval(x) - Eval(x'))/T}$}
+        \State{$x = x'$}
+        \EndIf{}
+        \State{$k++$}
+        \State{Update $T$}
+        \EndWhile{}
+    \end{algorithmic}
+    \caption{The simulated annealing algorithm}\label{alg:simulated-annealing}
+\end{algorithm}
+
+\subsection{Results}
+Example of a plot:
+% \begin{center}
+% \includegraphics[width=0.65\textwidth]{./plot.pdf}
+% \end{center}
+
+\section{}
+\subsection{Statement}
+Next problem
+\subsection{Experiments}
+Stuff related to solution
+\subsection{Results}
+
+\end{document}
