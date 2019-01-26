@@ -266,7 +266,7 @@ But in order to converge, and to a more reasonable value, it does so with a decr
             \State{Initialize $x$}
             \While{not done}\IComment{prefer convergence over fixed iterations}
                 \State{$x' = x + \text{perturbation}$ }
-                \If{$\displaystyle rand(0, 1) < e^{\left(f(x) - f(x')\right)\over T}$}
+                \If{$\displaystyle rand(0, 1) < e^{\frac{\left(f(x) - f(x')\right)}{T}}$}
                     \State{$x = x'$}
                 \EndIf{}
                 \State{Update $T$}
