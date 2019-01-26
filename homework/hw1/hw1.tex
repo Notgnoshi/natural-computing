@@ -20,7 +20,123 @@ to find the max of
 with $x\in [0,1]$. Use a real valued representation. Include a plot of the function with the
 location of the max and a plot of the estimate as a function of the iteration number. How sensitive
 are the algorithms to initial values?
+
 \subsection{Method}
+
+\subsubsection{Problem Setup and Gradient Methods}
+
+For completeness and curiosity, I chose to attack the problem from a symbolic perspective first.
+This gives an opportunity to get comfortable with the problem, and get my workflow setup correctly
+because I've recently reinstalled Ubuntu and subsequently all of my commonly used Python libraries.
+
+The python \mintinline{python}{sympy} library provides decent symbolic computation capabilities
+that I have had good luck with in the past. The only real surprising implementation detail is in
+the definition of the objective function.
+
+\begin{minted}[highlightlines={7-8}]{python}
+def f(x):
+    """The objective function to evaluate.
+
+    This function returns a sympy symbolic function, float, or np.ndarray
+    depending on the type of the input.
+    """
+    # Use symbolic sine, pi if necessary.
+    sin, pi = (sympy.sin, sympy.pi) if isinstance(x, sympy.Symbol) else (np.sin, np.pi)
+
+    return 2 ** (-2 * ((x - 0.1) / 0.9) ** 2) * sin(5 * pi * x) ** 6
+\end{minted}
+
+If the given type is a symbolic variable, return a symbolic representation of the function rather
+than the default numerical computation. Then this function can be given individual float values,
+numpy arrays, and sympy symbols.
+
+\begin{figure}[h]
+    \centering
+    % Make sure to run the notebook before this will compile.
+    \includegraphics{prob1/figures/prob1-function.pdf}
+    \caption{The objective function $f(x)$}\label{fig:prob1:function}
+\end{figure}
+
+The very first thing to do when dealing with optimizing a function is to plot anything you can get
+your hands on, including the neighbor's cat. The objective function and its derivative are shown in
+\autoref{fig:prob1:function} and \autoref{fig:prob1:derivative} respectively.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics{prob1/figures/prob1-derivative.pdf}
+    \caption{The objective function's derivative}\label{fig:prob1:derivative}
+\end{figure}
+
+We can immediately pick out the local and global extrema by visual inspection. The maxima
+periodically occur at $\frac{n}{5} - \frac{1}{10}$ with the global maximum occuring at
+$\frac{1}{10}$. The minima periodically occur at $\frac{n}{5}$ with value $0$.
+
+We can produce a symbolic version of the objective function easily with
+\begin{minted}{python}
+    x = sympy.Symbol('x')
+    print(f(x))
+\end{minted}
+which displays\footnote{When coerced with \mintinline{python}{sympy.init_printing()} in a Jupyter
+    notebook.}
+\[2^{- 2 {\left(1.11 x - 0.11\right)}^{2}} \sin^{6}{\left (5 \pi x
+        \right)}\]
+Then we compute the atrocious derivative symbolically.
+\begin{minted}{python}
+    fp = sympy.diff(f(x), x)
+    print(fp)
+\end{minted}
+which displays the trivial derivative
+% This garbage is what sympy + my autoformatter gives. I'm not fixing it.
+\[2^{- 2 \left(1.11 x - 0.11\right)^{2}} \left(- 4.938 x +
+    0.4938\right) \log{\left (2 \right )} \sin^{6}{\left (5 \pi x \right )} + 30 \cdot
+    2^{-2
+            \left(1.11 x - 0.11\right)^{2}} \pi \sin^{5}{\left (5 \pi
+        x\right)}\cos{\left(5 \pi x \right )}\]
+which we can then set equal to $0$ and solve
+\begin{minted}{python}
+    # solve f'(x) = 0
+    print(sympy.solveset(fp, x))
+\end{minted}
+to get $\frac{n}{5} - \frac{1}{10}$ after simplification
+% ditto
+\[\left\{x \mid x \in \mathbb{C} \wedge \left(\left(- 4.938 x + 0.4938\right) \log{\left (2
+            \right)} \sin{\left (5 \pi x \right )} + 30 \pi \cos{\left (5 \pi x \right )}\right)
+    \sin^{5}{\left (5
+        \pi x \right )} = 0 \right\} \setminus \left\{x \mid x \in \mathbb{C} \wedge 2^{2
+            \left(1.11 x -
+            0.11\right)^{2}} = 0 \right\}\]
+
+It's also helpful to compare the results of your typical gradient optimization method against the
+methods discussed later in this report.
+
+\begin{minted}{python}
+    # Convert the symbolic derivative to a numpy-compatable function for plotting.
+    fp = sympy.lambdify([x], fp, 'numpy')
+
+    # Minimizing -f(x) will maximize it.
+    result = scipy.optimize.minimize(lambda x: -f(x), 0.19, bounds=[(0, 1)])
+    print(result.x)
+    result = scipy.optimize.minimize(lambda x: -f(x), 0.2, bounds=[(0, 1)])
+    print(result.x)
+    result = scipy.optimize.minimize(lambda x: -f(x), 0.21, bounds=[(0, 1)])
+    print(result.x)
+\end{minted}
+\vspace{-1cm}
+\begin{minted}{text}
+    0.1
+    0.2
+    0.29953865
+\end{minted}
+\vspace{-1cm}
+
+On either side of the minima at $x = 0.2$ the gradient optimizer\footnote{The optimization
+    algorithm scipy chose for this function was the L-BFGS-B algorithm. I don't know anything about
+    how well and under what conditions it performs, but I assume it works better than anything I
+    could write by hand.} finds the next closest local maxima. This agrees with my intuitive
+understanding of gradient methods; without some kind of correction, they too are susceptible to
+finding local optima of oscillatory functions.
+
+\subsubsection{Hill Climbing}
 
 \begin{algorithm}
     % \begin{noindent}
@@ -51,6 +167,8 @@ are the algorithms to initial values?
     % \end{noindent}
     \caption{The iterated hill climbing algorithm}\label{alg:iterated-hill-climbing}
 \end{algorithm}
+
+\subsubsection{Simulated Annealing}
 
 \begin{algorithm}
     % \begin{noindent}
@@ -97,12 +215,9 @@ are the algorithms to initial values?
     \end{itemize}
 }
 
-\begin{figure}[h]
-    \centering
-    % Make sure to run the notebook before this will compile.
-    \includegraphics{prob1/figures/prob1-function.pdf}
-    \caption{The objective function $f(x)$}\label{fig:prob1:function}
-\end{figure}
+\subsubsection{Hill Climbing}
+
+\subsubsection{Simulated Annealing}
 
 \section{}\label{prob:2}
 \subsection{Statement}
