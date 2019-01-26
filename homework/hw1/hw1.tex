@@ -7,10 +7,6 @@
 \begin{document}
 \maketitle
 
-\todoinline{
-    Any comments applying to the whole homework?
-}
-
 \section{}\label{prob:1}
 
 \subsection{Statement}
@@ -140,7 +136,7 @@ finding local optima of oscillatory functions.
 
 This hill climbing algorithm discussed in the book is listed in \autoref{alg:hill-climbing}.
 
-\begin{algorithm}
+\begin{algorithm}[h]
     % \begin{noindent}
     \begin{algorithmic}
         \Function{hill-climbing}{$f$}
@@ -180,7 +176,7 @@ This can easily be implemented in Python as
         return path
 \end{minted}
 
-with \mintinline{python}{perturb(x)} defined as
+with \mintinline{python}{perturb(x, bounds, sigma)} defined as
 
 \begin{minted}{python}
     def perturb(x, bounds, sigma):
@@ -204,7 +200,7 @@ One of the easiest ways to improve the quality of the results from the hill clim
 to run it multiple times and take the best result. This is the iterated hill climbing algorithm
 from the book, listed in \autoref{alg:iterated-hill-climbing}.
 
-\begin{algorithm}
+\begin{algorithm}[h]
     % \begin{noindent}
     \begin{algorithmic}
         \Function{iterated-hill-climbing}{$f, n$}
@@ -248,13 +244,22 @@ function.
 
 \subsubsection{Simulated Annealing}
 
-\begin{algorithm}
+The simulated annealing algorithm from the book (listed in \autoref{alg:simulated-annealing}) is
+far more interesting. Similar to the hill climbing algorithm, it too perturbs the current solution
+in order to move around the feasible region. However, it not only accepts solutions that improve
+the current solution's fitness, it accepts solutions that \textit{decrease} the current solution's
+fitness with probability decreasing with the system temperature.
+
+The simulated annealing algorithm accepts such solutions in an attempt to move out of local optima.
+But in order to converge, and to a more reasonable value, it does so with a decreasing probability.
+
+\begin{algorithm}[H]
     % \begin{noindent}
     \begin{algorithmic}
         \Function{simulated-annealing}{$f$}
             \State{Initialize $T$}
             \State{Initialize $x$}
-            \While{not done}\IComment{prefer convergence over fixed iteration}
+            \While{not done}\IComment{prefer convergence over fixed iterations}
                 \State{$x' = x + \text{perturbation}$ }
                 \If{$\displaystyle rand(0, 1) < e^{\left(f(x) - f(x')\right)\over T}$}
                     \State{$x = x'$}
@@ -268,7 +273,50 @@ function.
     \caption{The simulated annealing algorithm}\label{alg:simulated-annealing}
 \end{algorithm}
 
-\begin{algorithm}
+\autoref{alg:simulated-annealing} too, isn't difficult to implement\footnote{Although it can be a
+    bitch to tune.} in Python. The difficulty lies in the choice of the perturbation method and the
+cooling schedule. I chose the same \mintinline{python}{perturb(x, bounds, sigma)} from above,
+although as mentioned later, picking the proper standard deviation required significant trial and
+error.
+
+\begin{minted}{python}
+    def simulated_annealing(func, bounds, sigma, temp, cooling_factor):
+        """Use simulated annealing to optimize the given function.
+
+        :param func: The function to minimize.
+        :param bounds: The lower and upper bounds on the feasible region.
+        :param sigma: The standard deviation to use when perturbing the current guess.
+        :param temp: The initial temperature of the system.
+        :param cooling_factor: How quickly the system should cool.
+        :returns: An array of points *accepted* by the random condition.
+        """
+        # Pick a random starting point somewhere in the domain.
+        x0 = np.random.uniform(*bounds)
+        current = func(x0)
+        path = []
+        while temp > 0.001:
+            xp = perturb(x0, bounds, sigma)
+            potential = func(xp)
+            if potential < current or np.random.random() < np.exp((current - potential) / temp):
+                x0 = xp
+                path.append(x0)
+                current = potential
+            temp *= 1 - cooling_factor
+
+        return np.array(path)
+\end{minted}
+
+Note that my implementation does not return an array of points at each iteration of the algorithm.
+It instead returns an array of points that the algorithm has accepted, whether the point improved
+the current solution's fitness or not. Also, note that the number of iterations the simulated
+annealing algorithm takes to converge depends on the initial temperature of the system and the
+cooling schedule. Contrast this with the hill climbing algorithm, which terminates after some
+predetermined number of steps.
+
+Although not required, I implemented an iterated version of the simulated annealing algorithm,
+echoing \autoref{alg:iterated-hill-climbing}.
+
+\begin{algorithm}[H]
     % \begin{noindent}
     \begin{algorithmic}
         \Function{iterated-simulated-annealing}{$f, n$}
@@ -280,9 +328,29 @@ function.
     \caption{The iterated simulated annealing algorithm}\label{alg:iterated-simulated-annealing}
 \end{algorithm}
 
-\todoinline{
-    Implement \autoref{alg:simulated-annealing} and plot results.
-}
+The algorithms are essentially identical, as are their implementations.
+
+\begin{minted}[highlightlines={14}]{python}
+    def iterated_simulated_annealing(func, bounds, sigma, temp, cooling_factor, iters):
+        """Repeatedly run simulated annealing to improve the quality of the results.
+
+        :param func: The function to minimize.
+        :param bounds: The lower and upper bounds on the feasible region.
+        :param sigma: The standard deviation to use when perturbing the current guess.
+        :param temp: The initial temperature of the system.
+        :param cooling_factor: How quickly the system should cool.
+        :param iters: The number of times to run the algorithm.
+        :returns: An array of solutions from each run, sorted by their fitness.
+        """
+        pool = ThreadPool(multiprocessing.cpu_count())
+        # starmap consumes the given iterable in parallel until it is exhausted, collecting the results.
+        results = pool.starmap(simulated_annealing, itertools.repeat((func, bounds, sigma, temp, cooling_factor), times=iters))
+        # Each result is a full path, not the optimal value
+        optimums = [r[-1] for r in results]
+        # Sort the optimums by their fitness.
+        optimums.sort(key=func)
+        return np.array(optimums)
+\end{minted}
 
 \subsection{Results}
 \todoinline{
