@@ -418,6 +418,57 @@ $x$ are more likely to land below the current solution than above.
 
 \subsubsection{Simulated Annealing}
 
+After a considerable\footnote{As an aside, it's very frustrating to not know if you're being an
+    idiot and implemented an algorithm incorrectly, or if you're being an idiot and picked
+    unreasonable metaparameters.} amount of tuning, I was able to get simulated annealing to yield
+better results than the hill climbing algorithm. The tunable metaparameters that I tweaked were the
+standard deviation of the perturbation function, the initial temperature, and the cooling factor.
+
+Picking an appropriate standard deviation is important because the scale of the domain is small
+enough that noise following a standard normal distribution is \textit{too} noisy --- resulting in
+convergence to a random peak \textit{despite exploring the entire damn feasible region}. Picking
+the cooling factor is important because we need to give the algorithm enough time to get its
+rebellious teenager phase out of the way before it starts settling down to a single value.
+
+The initial temperature of the system is interesting. After finding good values for the
+perturbation\footnote{Fun fact: I've had enough to drink that I first spelled this as
+    ``preturnabtion'', which is bad enough that my spell-checking extension failed to detect as an
+    error.} standard deviation and the cooling factor, I attempted to use temperatures of the same
+order of magnitude as the example solution of the Travelling Salesman Problem. Such temperatures
+\textit{did} yield correct solutions, but only after an extreme amount of exploration; it took
+longer to display the plot than it did to generate the solutions due to the amount of data
+involved.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{prob1/figures/prob1-simulated-annealing-results.pdf}
+    \caption{Simulated annealing results after an inordinate amount of
+        tuning}\label{fig:prob1:simulated-annealing-results}
+\end{figure}
+
+After figuring out appropriate values for the perturbation standard deviation and the cooling
+schedule, I was able to observe that modifying the initial temperature did not seem to modify the
+quality of the solution, or the value the iterated algorithm converged to, but \textit{did} impact
+the rate of convergence. I attempted values ranging from $8000$ to $0.002$, all of which eventually
+converged to the same value.
+
+I eventually settled on an initial temperature of $0.01$ even though $0.002$ worked just as well,
+because an iterative algorithm that converges after only $15$ iterations isn't very exciting.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics{prob1/figures/prob1-simulated-annealing-solutions.pdf}
+    \caption{Iterated simulated annealing results}\label{fig:prob1:simulated-annealing-solutions}
+\end{figure}
+
+Observe from \autoref{fig:prob1:simulated-annealing-solutions} that, with the proper
+metaparameters, the simulated annealing algorithm has \textit{much} better results than the hill
+climbing results summarized in \autoref{fig:prob1:iterated-hill-climbing-solutions}. Each of the
+runs of the simulated annealing algorithm results in the same peak marked as the solution. Further,
+note that the solutions \textit{seem to be the same point}, as opposed to the fairly loose clusters
+of the hill climbing algorithm. This is a consequence of the convergence condition of the simulated
+annealing algorithm, versus the fixed number of iterations of the hill climbing algorithm.
+
 \section{}\label{prob:2}
 \subsection{Statement}
 In lecture we addressed the Traveling Salesman Problem using Simulated Annealing. To speed up
