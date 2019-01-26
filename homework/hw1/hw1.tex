@@ -7,6 +7,9 @@
 \begin{document}
 \maketitle
 
+The Jupyter notebooks containing the work for each of the following problems can be found at
+\url{https://github.com/Notgnoshi/natural-computing/tree/master/homework/hw1}
+
 \section{}\label{prob:1}
 
 \subsection{Statement}
@@ -362,6 +365,54 @@ The algorithms are essentially identical, as are their implementations.
 }
 
 \subsubsection{Hill Climbing}
+
+Recall that the implementation of \autoref{alg:hill-climbing} picks a random starting point
+somewhere inside the feasible region. There is also randomness in the perturbation of the current
+solution as the algorithm progresses. This means one cannot run the algorithm once to get a sense
+of how well it performs. Thus I ran the hill climbing algorithm a great many times\footnote{Three.
+    I ran it three times.} and plotted the results, summarized in
+\autoref{fig:prob1:hill-climbing-results}.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=\textwidth]{prob1/figures/prob1-hill-climbing-results.pdf}
+    \caption{Results from successive runs of the hill climbing
+        algorithm}\label{fig:prob1:hill-climbing-results}
+\end{figure}
+
+In the left column, there is the accepted solution graphed as a function of the iteration number.
+In the right column, there is a plot of the accepted solutions overlayed on top of the objective
+value.\todo{This doesn't meet the requirement that I plot the estimate of the max (not the value at
+    which it occurs) as a function of the iteration number.}{}
+
+Interestingly, the plot of the accepted solution as a function of the iteration number was often a
+very ``stairsteppy'' function, with riser height of $0.1$. That is, the accepted solutions very
+often seem to jump from peak to peak, without hitting the sides of the peaks. I believe this is a
+figment of my imagination, and is a consequence of the combination of the hill climbing algorithm
+only accepting values that improve the current solution and the nature of the function being
+optimized --- with steep, narrow peaks.
+
+Since the iterated hill climbing algorithm in \autoref{alg:iterated-hill-climbing} takes the best
+solution out of $n$ runs of the algorithm, it's useful to plot the results of all $n$ runs on the
+same plot. \autoref{fig:prob1:iterated-hill-climbing-soltions} shows the results of the iterated
+hill climbing algorithm.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics{prob1/figures/prob1-hill-climbing-solution.pdf}
+    \caption{Solutions from multiple runs of the hill climbing
+        algorithm}\label{fig:prob1:iterated-hill-climbing-soltions}
+\end{figure}
+
+Notice that every near\footnote{It's bad form to save a binary file in a Git repository, so I have
+    to generate these plots every time I build this document from scratch. Since the algorithms are
+    random, this results in different plots every time --- so the result that makes it into the
+    final version may not be what I'm looking at now. There are fixes for this problem, but none
+    that I care to implement.} every peak is a solution returned by at least one iteration of the
+hill climbing algorithm. Also note that the solutions cluster around the peaks, rather than
+converge on the actual peaks themselves. This is due to the steep nature of each peak; a small
+change in $x$ results in a fairly large change in $f(x)$. This means that random perturbations of
+$x$ are more likely to land below the current solution than above.
 
 \subsubsection{Simulated Annealing}
 
