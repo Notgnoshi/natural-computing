@@ -14,31 +14,74 @@
 \section{}\label{prob:1}
 
 \subsection{Statement}
-Compare the effectiveness of the text's iterated hill climbing and simulated annealing algorithms to
-find the max of
+Compare the effectiveness of the text's iterated hill climbing and simulated annealing algorithms
+to find the max of
 \[ f(x) = 2^{-2{\left(\frac{(x - 0.1)}{0.9}\right)}^2}{\big(\sin(5\pi x)\big)}^6\]
 with $x\in [0,1]$. Use a real valued representation. Include a plot of the function with the
 location of the max and a plot of the estimate as a function of the iteration number. How sensitive
 are the algorithms to initial values?
 \subsection{Method}
 
-\begin{algorithm}[H]
+\begin{algorithm}
+    % \begin{noindent}
     \begin{algorithmic}
-        \State{$k=0$}
-        \State{Initialize $T$}
-        \State{Initialize $x$}
-        \State{Eval($x$)}
-        \While{$k < kmax$ and not done}
-        \State{$x'$ = $x$ + perturbation}
-        \State{Eval($x'$)}
-        \If{$rand(0,1) < e^{(Eval(x) - Eval(x'))/T}$}
-        \State{$x = x'$}
-        \EndIf{}
-        \State{$k++$}
-        \State{Update $T$}
-        \EndWhile{}
+        \Function{hill-climbing}{$f$}
+            \State{Initialize $x$}
+            \While{not done}\IComment{can be convergence or fixed iteration}
+                \State{$x' = x + \text{perturbation}$}
+                \If{$f(x') < f(x)$}\IComment{this minimizes $f(x)$}
+                    \State{$x = x'$}
+                \EndIf{}
+            \EndWhile{}
+            \State\Return{$x$}
+        \EndFunction{}
     \end{algorithmic}
+    % \end{noindent}
+    \caption{The hill climbing algorithm}\label{alg:hill-climbing}
+\end{algorithm}
+
+\begin{algorithm}
+    % \begin{noindent}
+    \begin{algorithmic}
+        \Function{iterated-hill-climbing}{$f, n$}
+            \State{$solutions = map\big(\Call{hill-climbing}{f}, \{1, \dots, n\}\big)$}\IComment{A trivially parallelizable operation}
+            \State\Return{Best solution}
+        \EndFunction{}
+    \end{algorithmic}
+    % \end{noindent}
+    \caption{The iterated hill climbing algorithm}\label{alg:iterated-hill-climbing}
+\end{algorithm}
+
+\begin{algorithm}
+    % \begin{noindent}
+    \begin{algorithmic}
+        \Function{simulated-annealing}{$f$}
+            \State{Initialize $T$}
+            \State{Initialize $x$}
+            \While{not done}\IComment{prefer convergence over fixed iteration}
+                \State{$x' = x + \text{perturbation}$ }
+                \If{$\displaystyle rand(0, 1) < e^{\left(f(x) - f(x')\right)\over T}$}
+                    \State{$x = x'$}
+                \EndIf{}
+                \State{Update $T$}
+            \EndWhile{}
+            \State\Return{$x$}
+        \EndFunction{}
+    \end{algorithmic}
+    % \end{noindent}
     \caption{The simulated annealing algorithm}\label{alg:simulated-annealing}
+\end{algorithm}
+
+\begin{algorithm}
+    % \begin{noindent}
+    \begin{algorithmic}
+        \Function{iterated-simulated-annealing}{$f, n$}
+            \State{$solutions = map\big(\Call{simulated-annealing}{f}, \{1, \dots, n\}\big)$}\IComment{A trivially parallelizable operation}
+            \State\Return{Best solution}
+        \EndFunction{}
+    \end{algorithmic}
+    % \end{noindent}
+    \caption{The iterated simulated annealing algorithm}\label{alg:iterated-simulated-annealing}
 \end{algorithm}
 
 \todoinline{
