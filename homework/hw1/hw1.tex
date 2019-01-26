@@ -469,6 +469,22 @@ note that the solutions \textit{seem to be the same point}, as opposed to the fa
 of the hill climbing algorithm. This is a consequence of the convergence condition of the simulated
 annealing algorithm, versus the fixed number of iterations of the hill climbing algorithm.
 
+In summary, I have several observations.
+\begin{itemize}
+    \item The simulated annealing algorithm converges closer to the actual peaks of the objective
+          function.
+    \item Simulated annealing required a considerable amount of tuning.
+    \item The tunable metaparameters that affected the correctness of the solution the most were
+          the standard deviation of the perturbation, and the cooling factor. The parameter that
+          affected speed of convergence the most was the initial temperature.
+    \item The solutions from repeated runs of the simulated annealing algorithm clustered much more
+          tightly than the solutions from repeated runs of the hill climbing algorithm.
+    \item When considering the standard deviation of the perturbation, you want enough noise to
+          explore the feasible region, yet not so cuh that you jump all over the place.
+    \item Temperatures ranging from $8000$ to $0.002$ (because 0.001 is the convergence criterion)
+          worked well, but smaller temperatures converged much faster.
+\end{itemize}
+
 \section{}\label{prob:2}
 \subsection{Statement}
 In lecture we addressed the Traveling Salesman Problem using Simulated Annealing. To speed up
