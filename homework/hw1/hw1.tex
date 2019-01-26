@@ -138,6 +138,8 @@ finding local optima of oscillatory functions.
 
 \subsubsection{Hill Climbing}
 
+This hill climbing algorithm discussed in the book is listed in \autoref{alg:hill-climbing}.
+
 \begin{algorithm}
     % \begin{noindent}
     \begin{algorithmic}
@@ -156,17 +158,93 @@ finding local optima of oscillatory functions.
     \caption{The hill climbing algorithm}\label{alg:hill-climbing}
 \end{algorithm}
 
+This can easily be implemented in Python as
+
+\begin{minted}{python}
+    def hill_climbing(func, bounds, sigma, iters):
+        """Minimize the given function using the Hill Climbing algorithm.
+
+        :param func: The function to minimize.
+        :param bounds: The lower and upper bounds on the feasible region.
+        :param sigma: The standard deviation to use when perturbing the current guess.
+        :param iters: The number of iterations to run the hill climbing algorithm for.
+        :returns: The path of points visited from the initial guess to the final solution.
+        """
+        path = np.zeros(iters)
+        x0 = np.random.uniform(*bounds)
+        for i in range(iters):
+            xp = perturb(x0, bounds, sigma)
+            if func(xp) < func(x0):
+                x0 = xp
+            path[i] = x0
+        return path
+\end{minted}
+
+with \mintinline{python}{perturb(x)} defined as
+
+\begin{minted}{python}
+    def perturb(x, bounds, sigma):
+        """Perturb the given value by adding zero-mean white noise.
+
+        :param x: The value to perturb.
+        :param bounds: The lower and upper bounds on the feasible region.
+        :param sigma: The standard deviation to use when adding white noise.
+        """
+        m, M = bounds
+        xp = x + np.random.normal(scale=sigma)
+        while xp >= M or xp <= m:
+            xp = x + np.random.normal(scale=sigma)
+        return xp
+\end{minted}
+
+Note that my implementation of \mintinline{python}{perturb(x)} will not perturb the given point
+outside of the feasible region for the problem.
+
+One of the easiest ways to improve the quality of the results from the hill climbing algorithm is
+to run it multiple times and take the best result. This is the iterated hill climbing algorithm
+from the book, listed in \autoref{alg:iterated-hill-climbing}.
+
 \begin{algorithm}
     % \begin{noindent}
     \begin{algorithmic}
         \Function{iterated-hill-climbing}{$f, n$}
             \State{$solutions = map\big(\Call{hill-climbing}{f}, \{1, \dots, n\}\big)$}\IComment{A trivially parallelizable operation}
-            \State\Return{Best solution}
+            \State\Return{The best solution}
         \EndFunction{}
     \end{algorithmic}
     % \end{noindent}
     \caption{The iterated hill climbing algorithm}\label{alg:iterated-hill-climbing}
 \end{algorithm}
+
+This algorithm can easily (even with parallelization) be implemented in Python as follows
+\begin{minted}[highlightlines={18}]{python}
+import itertools
+import multiprocessing
+# I wonder why it's called dummy?
+from multiprocessing.dummy import Pool as ThreadPool
+
+def iterated_hill_climbing(func, bounds, sigma, inner_iters, iters):
+    """Repeatedly climb the hill to find the less-local extremum.
+
+    :param func: The function to minimize.
+    :param bounds: The lower and upper bounds on the feasible region.
+    :param sigma: The standard deviation to use when perturbing the current guess.
+    :param inner_iters: The number of iterations to use for each run of the algorithm.
+    :param iters: The number of times to run the algorithm.
+    :returns: An array of solutions from each run, sorted by their fitness.
+    """
+    pool = ThreadPool(multiprocessing.cpu_count())
+    # starmap consumes the given iterable in parallel until it is exhausted, collecting the results.
+    results = pool.starmap(hill_climbing, itertools.repeat((func, bounds, sigma, inner_iters), times=iters))
+    # Each result is a full path, not the optimal value
+    optimums = [r[-1] for r in results]
+    # Sort the optimums by their fitness.
+    optimums.sort(key=func)
+    return np.array(optimums)
+\end{minted}
+This implementation runs the desired number of iterations in parallel using as many threads as you
+have processors before collecting all of the results and sorting the optimums by the objective
+function.
 
 \subsubsection{Simulated Annealing}
 
@@ -195,7 +273,7 @@ finding local optima of oscillatory functions.
     \begin{algorithmic}
         \Function{iterated-simulated-annealing}{$f, n$}
             \State{$solutions = map\big(\Call{simulated-annealing}{f}, \{1, \dots, n\}\big)$}\IComment{A trivially parallelizable operation}
-            \State\Return{Best solution}
+            \State\Return{The best solution}
         \EndFunction{}
     \end{algorithmic}
     % \end{noindent}
