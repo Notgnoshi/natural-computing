@@ -590,6 +590,22 @@ This will be the representation I use, and is thus the only representation I att
 mutation and (in \autoref{prob:3}) recombination operators on.
 
 \subsubsection{Mutation Methods}
+There are a number of possible mutation operators that will work on the chosen solution
+representation.
+\paragraph{Swap Mutation} This mutation randomly swaps two cities in the tour.
+\paragraph{Insertion Mutation} This mutation is similar to a swap. It picks a random city, removes
+it from the list, and inserts it as some randomly selected position.
+\paragraph{Displacement Mutation} This is a natural extension of the insertion mutation. Rather
+than removing and inserting a single city, remove and insert an entire subpath.
+\paragraph{Scramble Mutation} This mutation is not used much, because it can destroy good genetic
+information in a parent. It picks a random subpath in a solution and shuffles it.
+\paragraph{Inversion Mutation} This is the mutation used in the simulated annealing example shown
+in class. It picks a random subpath in a solution, and reverses it. This is a useful operator
+because it breaks only two links between cities, and leaves the rest intact. All of the other
+mutations can be implemented as a sequence of inversions. This mutation can also be extended to act
+like the displacement mutation where a random subpath is removed, inverted, and reinserted
+somewhere else in the tour.
+
 \subsubsection{Selection Methods}
 
 \subsection{Experiments}
