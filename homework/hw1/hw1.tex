@@ -499,6 +499,98 @@ sample program. Compare deterministic and stochastic selection operators.
 
     Summarize the evolutionary algorithm.
 }
+
+There are a number of decisions to make when implementing the standard evolutionary algorithm
+listed in \autoref{alg:standard-ea}. There are a great many ways to perform each of the steps
+(Initialization, Recombination, Mutation, and Selection, as well as the stopping criterion), and
+picking the \textit{right} method constitutes the difficulty of the problem.
+
+\begin{algorithm}[h]
+    % \begin{noindent}
+    \begin{algorithmic}
+        \Function{standard-ea}{}
+            \State{Initialize $population$}
+            \While{not done}
+                \State{Recombine $population$}
+                \State{Mutate $population$}
+                \State{Select $population$}
+            \EndWhile{}
+            \State\Return{$population$}
+        \EndFunction{}
+    \end{algorithmic}
+    % \end{noindent}
+    \caption{The standard evolutionary algorithm}\label{alg:standard-ea}
+\end{algorithm}
+
+In this problem, there will be no recombination of the population, only mutation and selection.
+Recombination will be done in \autoref{prob:3}, however, so it is useful to keep recombination in
+mind when implementing the solution for this problem.
+
+\subsubsection{Solution Representation}
+Of particular importance is the choice of solution representation. The representations for a
+problem make an extreme effect on the performance, ease, and usability of a solution. In many cases
+even, your choice of data structure makes the proper algorithm for solving the problem obvious,
+while an improper choice makes implementing the solution tedious, nonintuitive, and ill-performant.
+
+For this problem, the most obvious representation for a solution is an ordered path
+\[\lbrack C_1, C_2, \dots C_n \rbrack \]
+of cities. There are other representations, however. As a reference,~\cite{tsp_ea} enumerates a
+great deal of variations for the representations of solutions, mutation operators, and
+recombination operators. Briefly, the solution representation options that~\cite{tsp_ea} lists are
+listed\footnote{I'm running out of nested \LaTeX{} subsections!} below.
+
+\paragraph{Bitstring}
+The bitstring representation is the most common solution representation in traditional evolutionary
+and genetic algorithm literature. In this representation, with a problem with $n$ cities, a
+particular city is encoded as a bitstring of length $\ceil*{\log_2 n}$, and a path of cities (a
+solution) as a bitstring of $n\ceil*{\log_2 n}$ concatenated cities.
+
+However, this representation provides some difficulty when implementing \autoref{alg:standard-ea}.
+Namely, the mutation and recombination operators must be more sophisticated than simple bitwise
+operations because some $\ceil*{\log_2 n}$ long bitstrings might not represent a valid city, and
+some $n\ceil*{\log_2 n}$ long bitstrings might not represent a valid solution to the problem. There
+are some solutions to these problems, which~\cite{tsp_ea} mentions, but they are more tedious than
+I would prefer.
+
+\paragraph{Matrix}
+The paper~\cite{tsp_ea} lists two different binary matrix representations of a solution.
+\begin{enumerate}
+    \item Represent an individual as a matrix $M = \{m_{ij}\}$ where $m_{ij} = 1$ if and only if
+          the city $i$ is visited before the city $j$ in the represented tour. The paper lists the
+          following properties that hold for a valid tour represented in this manner.
+          \begin{enumerate}
+              \item $\displaystyle \sum_i^n \sum_j^n m_{ij} = \frac{n(n - 1)}{2}$
+              \item $\displaystyle m_{ii} = 0$
+              \item $\displaystyle (m_{ij} = 1) \wedge (m_{jk} = 1) \Rightarrow m_{ik} = 1$
+          \end{enumerate}
+    \item Represent an individual as a matrix $M = \{m_{ij}\}$ where $m_{ij} = 1$ if and only if
+          city $j$ is visited immediately after city $i$. That is, a valid tour is represented by a
+          matrix with exactly one $1$ in every row and in every column.
+\end{enumerate}
+
+\paragraph{Adjacency List}
+An uncommon representation is that of an adjacency list, where city $j$ occurs in the $i$th
+position of the list if and only if the tour leads from city $i$ to city $j$. However, the proposed
+mutation and recombination operators good subpaths in parents, so this representation is not widely
+used.
+
+\paragraph{Ordered Path}
+As mentioned above, this is the most obvious representation, and the one~\cite{tsp_ea} exclusively
+deals with. Here, a path is represented as an ordered list
+\[C_1, C_2, \dots C_n \]
+where $C_i$ occurs at the $j$th position if it is the $j$th city to be visited.
+
+This representation yields itself nicely to the fitness evaluation of individuals in your
+population, and is useful as the final representation of a returned solution. However, the
+classical mutation and recombination operators typically performed on bitstrings will not work on
+this representation because they can (will) result in invalid paths.
+
+This will be the representation I use, and is thus the only representation I attempt to define
+mutation and (in \autoref{prob:3}) recombination operators on.
+
+\subsubsection{Mutation Methods}
+\subsubsection{Selection Methods}
+
 \subsection{Experiments}
 \todoinline{
     Write an evolutionary algorithm, and steal the mutation operator from the SA algorithm.

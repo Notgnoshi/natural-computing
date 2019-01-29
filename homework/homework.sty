@@ -18,6 +18,7 @@
 \usepackage[toc, acronym, numberedsection=nameref]{glossaries}
 \usepackage[utf8]{inputenc}
 \usepackage{lipsum}
+\usepackage{mathtools}
 \usepackage[cache=false]{minted}
 \usepackage{parskip}
 \usepackage{pgfplots}
@@ -112,3 +113,7 @@
 \AtBeginDocument{%
 \renewcommand{\sectionautorefname}{Problem}
 }
+
+% Use \ceil*{} or \floor*{}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
