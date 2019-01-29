@@ -612,6 +612,11 @@ mutations can be implemented as a sequence of inversions. A proof of this remark
 a random subpath is removed, inverted, and reinserted somewhere else in the tour.
 
 \subsubsection{Selection Methods}
+In my implementation, I will deal with two different selection methods: stochastic and
+deterministic. The stochastic selection will rank the population according to their fitness and
+sample the sorted population by some probability distribution where the probability of being chosen
+is directly proportional to an individual's fitness. The deterministic method will rank the
+population by their fitness and select the top $n$ to survive.
 
 \subsection{Results}
 \todoinline{
