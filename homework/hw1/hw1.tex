@@ -602,9 +602,9 @@ information in a parent. It picks a random subpath in a solution and shuffles it
 \paragraph{Inversion Mutation} This is the mutation used in the simulated annealing example shown
 in class. It picks a random subpath in a solution, and reverses it. This is a useful operator
 because it breaks only two links between cities, and leaves the rest intact. All of the other
-mutations can be implemented as a sequence of inversions. This mutation can also be extended to act
-like the displacement mutation where a random subpath is removed, inverted, and reinserted
-somewhere else in the tour.
+mutations can be implemented as a sequence of inversions. A proof of this remark is given in
+\autoref{app:proof}. This mutation can also be extended to act like the displacement mutation where
+a random subpath is removed, inverted, and reinserted somewhere else in the tour.
 
 \subsubsection{Selection Methods}
 
@@ -647,6 +647,23 @@ deterministic and stochastic selection operators.
 \todoinline{
     Compare selection operators.
 }
+
+\appendix\appendixpage{}\addappheadtotoc{}
+\section{Inversion Proof}\label{app:proof}
+
+Since the best proofs are constructive, I thought I would get meta and programmatically construct a
+proof that swaps, insertions, displacements, and shuffles can be implemented as a sequence of
+inversions.
+
+\inputminted{python}{proof.py}
+
+Unfortunately, I cannot claim to be the original author of such an excellent class of program. The
+inspiration came from a fellow sufferer of topology,
+\textcolor{blue}{\href{https://www.reddit.com/user/kwprules}{u/kwprules}}, a year previous to my
+own suffering. The illuminated discussion on their proof technique may be found
+\textcolor{blue}
+{\href{https://www.reddit.com/r/math/comments/7gqhlc/what\_to\_say\_instead\_of\_trivially/}{here}}
+.
 
 \bibliographystyle{ieeetr}
 \bibliography{../homework}{}
