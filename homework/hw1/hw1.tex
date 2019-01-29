@@ -9,6 +9,8 @@
 \begingroup
 \hypersetup{linkcolor=black}
 \tableofcontents
+% TODO: Remove this.
+\listoftodos
 \endgroup
 \newpage
 
@@ -364,13 +366,6 @@ The algorithms are essentially identical, as are their implementations.
 \end{minted}
 
 \subsection{Results}
-\todoinline{
-    \begin{itemize}
-        \item Plot the function.
-        \item Plot the estimate of the max as a function of the iteration number.
-        \item Examine the sensitivity to the initial values.
-    \end{itemize}
-}
 
 \subsubsection{Hill Climbing}
 
@@ -390,8 +385,7 @@ of how well it performs. Thus I ran the hill climbing algorithm a great many tim
 
 In the left column, there is the accepted solution graphed as a function of the iteration number.
 In the right column, there is a plot of the accepted solutions overlayed on top of the objective
-value.\todo{This doesn't meet the requirement that I plot the estimate of the max (not the value at
-    which it occurs) as a function of the iteration number.}{}
+value.
 
 Interestingly, the plot of the accepted solution as a function of the iteration number was often a
 very ``stairsteppy'' function, with riser height of $0.1$. That is, the accepted solutions very
@@ -404,6 +398,8 @@ Since the iterated hill climbing algorithm in \autoref{alg:iterated-hill-climbin
 solution out of $n$ runs of the algorithm, it's useful to plot the results of all $n$ runs on the
 same plot. \autoref{fig:prob1:iterated-hill-climbing-solutions} shows the results of the iterated
 hill climbing algorithm.
+
+\todoinline{Mention the sensitivity to the initial values.}
 
 \begin{figure}[h]
     \centering
@@ -461,6 +457,8 @@ converged to the same value.
 I eventually settled on an initial temperature of $0.01$ even though $0.002$ worked just as well,
 because an iterative algorithm that converges after only $15$ iterations isn't very exciting.
 
+\todoinline{Mention the sensitivity to the initial values.}
+
 \begin{figure}[h]
     \centering
     \includegraphics{prob1/figures/prob1-simulated-annealing-solutions.pdf}
@@ -491,7 +489,10 @@ In summary, I have several observations.
           worked well, but smaller temperatures converged much faster.
 \end{itemize}
 
+\todoinline{Mention the sensitivity to the initial values.}
+
 \section{The TSP with Mutation Only}\label{prob:2}
+
 \subsection{Statement}
 In lecture we addressed the Traveling Salesman Problem using Simulated Annealing. To speed up
 convergence and increase the odds of finding the global extremal, it makes sense to try an
@@ -500,12 +501,6 @@ recombination in this problem. Write an evolutionary algorithm to solve the TSP 
 sample program. Compare deterministic and stochastic selection operators.
 
 \subsection{Method}
-\todoinline{
-    Outline the method(s) used to implement the selection operator.
-
-    Summarize the evolutionary algorithm.
-}
-
 There are a number of decisions to make when implementing the standard evolutionary algorithm
 listed in \autoref{alg:standard-ea}. There are a great many ways to perform each of the steps
 (Initialization, Recombination, Mutation, and Selection, as well as the stopping criterion), and
@@ -594,22 +589,34 @@ this representation because they can (will) result in invalid paths.
 This will be the representation I use, and is thus the only representation I attempt to define
 mutation and (in \autoref{prob:3}) recombination operators on.
 
+\todoinline{Implement population and individual random generation functions.}
+
+\subsubsection{Fitness}
+\todoinline{Define and implement fitness function.}
+
 \subsubsection{Mutation Methods}
 There are a number of possible mutation operators that will work on the chosen solution
 representation.
+
 \paragraph{Swap Mutation} This mutation randomly swaps two cities in the tour.
+
 \paragraph{Insertion Mutation} This mutation is similar to a swap. It picks a random city, removes
 it from the list, and inserts it as some randomly selected position.
 \paragraph{Displacement Mutation} This is a natural extension of the insertion mutation. Rather
 than removing and inserting a single city, remove and insert an entire subpath.
+
 \paragraph{Scramble Mutation} This mutation is not used much, because it can destroy good genetic
 information in a parent. It picks a random subpath in a solution and shuffles it.
+
 \paragraph{Inversion Mutation} This is the mutation used in the simulated annealing example shown
 in class. It picks a random subpath in a solution, and reverses it. This is a useful operator
 because it breaks only two links between cities, and leaves the rest intact. All of the other
 mutations can be implemented as a sequence of inversions. A proof of this remark is given in
 \autoref{app:proof}. This mutation can also be extended to act like the displacement mutation where
 a random subpath is removed, inverted, and reinserted somewhere else in the tour.
+
+\todoinline{Implement (at least) the inversion mutation. Use a keyword argument to pick
+    mutation.}
 
 \subsubsection{Selection Methods}
 In my implementation, I will deal with two different selection methods: stochastic and
@@ -618,14 +625,20 @@ sample the sorted population by some probability distribution where the probabil
 is directly proportional to an individual's fitness. The deterministic method will rank the
 population by their fitness and select the top $n$ to survive.
 
+\todoinline{Implement both selection methods. Use keyword argument to pick deterministic or
+    stochastic.}
+
 \subsection{Results}
 \todoinline{
-    Compare solutions
+    Implement EA with different components.
+
+    Compare solutions of different mutation and selection operators.
 
     Compare deterministic and stochastic selection operators.
 }
 
 \section{The TSP with Mutation and Recombination}\label{prob:3}
+
 \subsection{Statement}
 In \autoref{prob:2} we implemented EA code to solve the Traveling Salesman Problem. In this
 problem, implement recombination (crossover) in your EA. For this problem you will need to use an
@@ -634,19 +647,16 @@ deterministic and stochastic selection operators.
 
 \subsection{Method}
 \todoinline{
+    List recombination methods from~\cite{tsp_ea}.
+
     Implement crossover.
-
-    Find the right encoding for the problem?
 }
-
-\subsection{Experiments}
-
-\subsubsection{Experiment 1}
-\subsubsection{Experiment 2}
 
 \subsection{Results}
 \todoinline{
     Compare selection operators.
+
+    Compare recombination operators.
 }
 
 \appendix\appendixpage{}\addappheadtotoc{}
