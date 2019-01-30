@@ -588,11 +588,11 @@ this representation because they can (will) result in invalid paths.
 
 This will be the representation I use, and is thus the only representation I attempt to define
 mutation and (in \autoref{prob:3}) recombination operators on. In this representation, we can
-generate a random individual by
+generate a starting collection of cities with
 
 \begin{minted}{python}
-    def generate_individual(n, scale=100):
-        """Generates an individual solution of the given size.
+    def generate_seed(n, scale=100):
+        """Generates a starting seed of the given size.
 
         Pick random coordinates in the `scale`x`scale` grid uniformly.
 
@@ -603,21 +603,30 @@ generate a random individual by
         return np.random.rand(n, 2) * scale
 \end{minted}
 
-and a random population of a given size by
+and a random population of different orderings for a collection of cities with
 
 \begin{minted}{python}
-    def generate_population(size, n, scale=100):
+    def generate_population(seed, size, scale=100):
         """Generate a population of individuals with the given size.
 
         Pick random coordinates in the `scale`x`scale` grid uniformly.
 
+        :param seed: An unsorted array of city locations.
         :param size: The number of individuals to generate.
-        :param n: The size of each individual.
         :param scale: How much to scale the individual's coordinates by.
         """
-        # Scale up the uniform values from [0, 1].
-        return np.random.rand(size, n, 2) * scale
+        population = np.zeros((size, *seed.shape))
+        for i in range(size):
+            individual = np.copy(seed)
+            np.random.shuffle(individual)
+            population[i] = individual
+        return population
 \end{minted}
+
+Note that this is memory inefficient. I believe that there should be a way to use an array of
+shuffled indices as your population, and then implement the fitness function in such a way that it
+knows how to retrieve the location of a city from its index. However, it runs well enough that I
+won't change it now.
 
 The \mintinline{python}{generate_individual()} function generates a single individual as shown in
 \autoref{fig:prob2:random-individual}.
@@ -662,12 +671,19 @@ Then the fitness function for an individual can be written succinctly as
         :type individual: np.ndarray with shape (n, 2)
         :return: The fitness of the individual.
         """
-        return sum(np.linalg.norm(c1 - c2) for c1, c2 in pairwise(individual))
+        return -sum(np.linalg.norm(c1 - c2) for c1, c2 in pairwise(individual))
 \end{minted}
+
+Note that the sum is negated, because we want to \textit{minimize} the fitness.\todo{What happens
+    if it isn't negated? I couldn't even begin to guess.}
 
 \subsubsection{Mutation Methods}
 There are a number of possible mutation operators that will work on the chosen solution
-representation.
+representation. Note that these implementations are sometimes not as simple as one would think,
+because an array access (\mintinline{python}{v = a[i]}) returns a \textit{view} of the original
+array. And when you modify a view, it modifies the original array. This has particular importance
+when dealing with multidimensional arrays because the returned items are now \textit{views} rather
+than direct scalar values.
 
 \paragraph{Swap Mutation} This mutation randomly swaps two cities in the tour.
 \begin{minted}{python}
@@ -679,10 +695,12 @@ representation.
         # Arrays are (kind of) passed by reference in Python.
         x = np.copy(individual)
         # Generate two valid indices to swap.
-        i = np.random.randint(0, len(x) - 1)
-        j = np.random.randint(0, len(x) - 1)
-
-        x[i], x[j] = x[j], x[i]
+        i = np.random.randint(0, len(x) - 2)
+        j = np.random.randint(i, len(x) - 1)
+        # array indexing returns views, not copies
+        temp = np.copy(x[i])
+        x[i] = x[j]
+        x[j] = temp
 
         return x
 \end{minted}
@@ -695,11 +713,13 @@ it from the list, and inserts it at some randomly selected position.
 
         Returns a new mutated copy of the given array.
         """
-        i = np.random.randint(0, len(individual) - 1)
-        j = np.random.randint(0, len(individual) - 1)
-
+        i = np.random.randint(0, len(individual) - 2)
+        j = np.random.randint(i, len(individual) - 1)
         # Delete the element at index j and insert it before index i.
-        return np.insert(np.delete(individual, j), i, individual[j])
+        temp = np.delete(individual, j, axis=0)
+        temp = np.insert(temp, i, individual[j], axis=0)
+
+        return temp
 \end{minted}
 
 \paragraph{Displacement Mutation} This is a natural extension of the insertion mutation. Rather
@@ -715,10 +735,10 @@ than removing and inserting a single city, remove and insert an entire subpath.
         j = np.random.randint(i, len(individual) - 1)
         subarray = individual[i:j]
         # Delete the given subarray
-        tmp = np.delete(individual, range(i, j))
+        tmp = np.delete(individual, range(i, j), axis=0)
         k = np.random.randint(0, len(tmp) - 1)
 
-        return np.insert(tmp, k, subarray)
+        return np.insert(tmp, k, subarray, axis=0)
 \end{minted}
 
 \paragraph{Shuffle Mutation} This mutation is not used much, because it can destroy good genetic
@@ -843,6 +863,11 @@ and finally, a nice helper function
         return methods[method](population, size, func)
 \end{minted}
 
+\todoinline{Consider modifying the stochastic selection so that it can't throw away the top few?}
+
+\subsubsection{The Evolutionary Algorithm}
+\todoinline{Copy-paste implementation and add commentary.}
+
 \subsection{Results}
 \todoinline{
     Implement EA with different components.
@@ -850,6 +875,11 @@ and finally, a nice helper function
     Compare solutions of different mutation and selection operators.
 
     Compare deterministic and stochastic selection operators.
+
+    Compare against simulated annealing (easy!)
+
+    Talk about how getting the fitness function right really changes things. Add plots, and
+    reference the plots in the fitness function section of the methodology.
 }
 
 \section{The TSP with Mutation and Recombination}\label{prob:3}
