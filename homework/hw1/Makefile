@@ -20,3 +20,8 @@ clean:
 
 view:
 	1>/dev/null 2>/dev/null xdg-open $(PROJECT_NAME).pdf &
+
+# Sure, I could make them dependencies, or I could not.
+generate:
+	jupyter-nbconvert --execute --inplace prob1/prob1.ipynb
+	jupyter-nbconvert --execute --inplace prob2/prob2.ipynb
