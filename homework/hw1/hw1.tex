@@ -670,14 +670,73 @@ There are a number of possible mutation operators that will work on the chosen s
 representation.
 
 \paragraph{Swap Mutation} This mutation randomly swaps two cities in the tour.
+\begin{minted}{python}
+    def swap_mutation(individual):
+        """Swap two random cities in the individual.
+
+        Returns a new mutated copy of the given array.
+        """
+        # Arrays are (kind of) passed by reference in Python.
+        x = np.copy(individual)
+        # Generate two valid indices to swap.
+        i = np.random.randint(0, len(x) - 1)
+        j = np.random.randint(0, len(x) - 1)
+
+        x[i], x[j] = x[j], x[i]
+
+        return x
+\end{minted}
 
 \paragraph{Insertion Mutation} This mutation is similar to a swap. It picks a random city, removes
-it from the list, and inserts it as some randomly selected position.
+it from the list, and inserts it at some randomly selected position.
+\begin{minted}{python}
+    def insertion_mutation(individual):
+        """Insert a random value in the list somewhere else in the list.
+
+        Returns a new mutated copy of the given array.
+        """
+        i = np.random.randint(0, len(individual) - 1)
+        j = np.random.randint(0, len(individual) - 1)
+
+        # Delete the element at index j and insert it before index i.
+        return np.insert(np.delete(individual, j), i, individual[j])
+\end{minted}
+
 \paragraph{Displacement Mutation} This is a natural extension of the insertion mutation. Rather
 than removing and inserting a single city, remove and insert an entire subpath.
+\begin{minted}{python}
+    def displacement_mutation(individual):
+        """Inserts a random subarray in the list somewhere else.
 
-\paragraph{Scramble Mutation} This mutation is not used much, because it can destroy good genetic
+        Returns a new mutated copy of the given array.
+        """
+        # Pick a random subarray
+        i = np.random.randint(0, len(individual) - 2)
+        j = np.random.randint(i, len(individual) - 1)
+        subarray = individual[i:j]
+        # Delete the given subarray
+        tmp = np.delete(individual, range(i, j))
+        k = np.random.randint(0, len(tmp) - 1)
+
+        return np.insert(tmp, k, subarray)
+\end{minted}
+
+\paragraph{Shuffle Mutation} This mutation is not used much, because it can destroy good genetic
 information in a parent. It picks a random subpath in a solution and shuffles it.
+\begin{minted}{python}
+    def shuffle_mutation(individual):
+        """Shuffles a random subarray in the given individual.
+
+        Returns a new mutated copy of the given array.
+        """
+        # Pick a random subarray
+        i = np.random.randint(0, len(individual) - 2)
+        j = np.random.randint(i, len(individual) - 1)
+        x = np.copy(individual)
+        np.random.shuffle(x[i:j])
+
+        return x
+\end{minted}
 
 \paragraph{Inversion Mutation} This is the mutation used in the simulated annealing example shown
 in class. It picks a random subpath in a solution, and reverses it. This is a useful operator
@@ -685,9 +744,41 @@ because it breaks only two links between cities, and leaves the rest intact. All
 mutations can be implemented as a sequence of inversions. A proof of this remark is given in
 \autoref{app:proof}. This mutation can also be extended to act like the displacement mutation where
 a random subpath is removed, inverted, and reinserted somewhere else in the tour.
+\begin{minted}{python}
+    def inversion_mutation(individual):
+        """Inverts a random subarray in the given individual.
 
-\todoinline{Implement (at least) the inversion mutation. Use a keyword argument to pick
-    mutation.}
+        Returns a new mutated copy of the given array.
+        """
+        i = np.random.randint(0, len(individual) - 2)
+        j = np.random.randint(i, len(individual) - 1)
+        x = np.copy(individual)
+        # Invert the subarray.
+        x[i:j] = x[i:j][::-1]
+
+        return x
+\end{minted}
+
+Given these mutation methods, I define the \mintinline{python}{mutate()} function for ease of use.
+
+\begin{minted}{python}
+    def mutate(individual, method='inversion'):
+        """Mutate the given individual via the given method.
+
+        Returns a new mutated copy of the given array.
+
+        :param method: One of 'swap', 'insertion', 'displacement',
+        'shuffle', or 'inversion'. Defaults to 'inversion'.
+        """
+        methods = {
+            'swap': swap_mutation,
+            'insertion': insertion_mutation,
+            'displacement': displacement_mutation,
+            'shuffle': shuffle_mutation,
+            'inversion': inversion_mutation,
+        }
+        return methods[method](individual)
+\end{minted}
 
 \subsubsection{Selection Methods}
 In my implementation, I will deal with two different selection methods: stochastic and
