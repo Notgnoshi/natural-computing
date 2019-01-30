@@ -787,8 +787,61 @@ sample the sorted population by some probability distribution where the probabil
 is directly proportional to an individual's fitness. The deterministic method will rank the
 population by their fitness and select the top $n$ to survive.
 
-\todoinline{Implement both selection methods. Use keyword argument to pick deterministic or
-    stochastic.}
+We can implement deterministic selection by
+\begin{minted}{python}
+    def deterministic_selection(population, size, func):
+        """Deterministically select the most fit from the given population.
+
+        Use the given fitness function to rank the population, then pick
+        the next `size` of the population to move on. This assumes that,
+        for a problem without recombination, the mutated individuals have
+        been mixed in with the original population.
+
+        :param population: The population to cull.
+        :param size: The desired size of the population.
+        :param func: The fitness function to rank the population by.
+        :returns: The culled population, sorted upwards in increasing fitness.
+        """
+        fitnesses = np.array([func(p) for p in population])
+        indices = np.argsort(fitnesses, axis=0)
+        euthanize = len(population) - size
+        return population[indices][euthanize:]
+\end{minted}
+stochastic selection by
+\begin{minted}{python}
+    def stochastic_selection(population, size, func):
+        """Randomly select the most fit from the given population.
+
+        Select without replacement an individual with probability
+        proportional to its fitness.
+
+        :param population: The population to cull.
+        :param size: The desired size of the population.
+        :param func: The fitness function to rank the population by.
+        :returns: The culled population, unsorted.
+        """
+        fitnesses = np.array([func(p) for p in population])
+        probabilities = fitnesses / np.sum(fitnesses)
+        survivors = np.random.choice(len(population), size, replace=False, p=probabilities)
+        return population[survivors]
+\end{minted}
+and finally, a nice helper function
+\begin{minted}{python}
+    def select(population, size, func, method='deterministic'):
+        """Select the `size` most fit from the given population.
+
+        :param population: The population to cull.
+        :param size: The desired size of the population.
+        :param func: The fitness function to rank the population by.
+        :param method: One of 'deterministic' or 'stochastic'.
+        :returns: The culled population, in arbitrary order.
+        """
+        methods = {
+            'stochastic': stochastic_selection,
+            'deterministic': deterministic_selection,
+        }
+        return methods[method](population, size, func)
+\end{minted}
 
 \subsection{Results}
 \todoinline{
