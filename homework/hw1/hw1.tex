@@ -632,7 +632,38 @@ Note that each city is an $(x, y)$ pair so that we can more easily compute the d
 them without explicitly saving that information in a graph datastructure.
 
 \subsubsection{Fitness}
-\todoinline{Define and implement fitness function.}
+With this representation as an individual as an ordered list of ordered pairs, an individual's
+solution is given as the sum of the pairwise distances between cities. To implement this, it is
+helpful to use the
+\href{https://docs.python.org/3/library/itertools.html#itertools-recipes}{itertools pairwise
+    recipe} for iterating over a sequence in pairs.
+\begin{minted}{python}
+    import itertools
+
+    def pairwise(iterable):
+        """Iterate over the given iterable in pairs.
+
+        pairwise([1, 2, 3, 4]) -> (1, 2), (2, 3), (3, 4)
+        """
+        a, b = itertools.tee(iterable)
+        # Advance b one step
+        next(b, None)
+        return zip(a, b)
+\end{minted}
+Then the fitness function for an individual can be written succinctly as
+\begin{minted}{python}
+    def fitness(individual):
+        """Evaluate the fitness of the given individual.
+
+        Compute the Euclidean distance between every pair of cities in the individual
+        and add them together.
+
+        :param individual: An array of cities, where each city is an (x, y) pair.
+        :type individual: np.ndarray with shape (n, 2)
+        :return: The fitness of the individual.
+        """
+        return sum(np.linalg.norm(c1 - c2) for c1, c2 in pairwise(individual))
+\end{minted}
 
 \subsubsection{Mutation Methods}
 There are a number of possible mutation operators that will work on the chosen solution
