@@ -683,7 +683,7 @@ poor individuals. Inverting the fitness seemed to have a good result.\footnote{W
     guess, although I'm sure a naive student might spend hours and hours wondering why their
     implementation was giving them the exact opposite of what they wanted.}
 
-\subsubsection{Mutation Methods}
+\subsubsection{Mutation Methods}\label{sec:mutation-methods}
 There are a number of possible mutation operators that will work on the chosen solution
 representation. Note that these implementations are sometimes not as simple as one would think,
 because an array access (\mintinline{python}{v = a[i]}) returns a \textit{view} of the original
@@ -970,18 +970,131 @@ Note that this implementation uses the uninverted fitness function, so in order 
 to pears and grapefruit to plums, the returned array of fitnesses must be inverted as well.
 
 \subsection{Results}
-\todoinline{
-    Implement EA with different components.
+In \autoref{prob:1}, each run of the hill climbing and simulated annealing functions generated the
+initial random starting point. Here, however, since we're comparing the results of three different
+algorithms, I generated the random cities ahead of time.
 
-    Compare solutions of different mutation and selection operators.
+\begin{figure}[h]
+    \centering
+    \includegraphics{prob2/figures/prob2-city-locations.pdf}
+    \caption{The city locations to use for the TSP}\label{fig:prob2:city-locations}
+\end{figure}
 
-    Compare deterministic and stochastic selection operators.
+Then I chose to use only the inversion mutation and compare stochastic and deterministic selection
+methods against the solution from the simulated annealing algorithm.
 
-    Compare against simulated annealing (easy!)
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{prob2/figures/prob2-fitness-stochastic.pdf}
+        \caption{Fitness over time}\label{fig:prob2:stochastic-fitness}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{prob2/figures/prob2-best-stochastic.pdf}
+        \caption{The best solution}\label{fig:prob2:stochastic-best}
+    \end{subfigure}
+    \caption{The stochastic selection operator results}\label{fig:prob2:stochastic-selection}
+\end{figure}
 
-    Talk about how getting the fitness function right really changes things. Add plots, and
-    reference the plots in the fitness function section of the methodology.
-}
+Notice in \autoref{fig:prob2:stochastic-fitness} that the fitness of the best individual in the
+population over time has a lot of variability when using stochastic selection. I attempted several
+variations on the stochastic selection, and I saw results similar to this in every case. Often the
+best solution was the very first one attempted, and no solution past that point improved on it. In
+other cases the best fitness show no overall trend upwards or downwards.
+
+Moving from simply negating the fitness function to \textit{minimize} the tour length to leaving it
+positive and inverting it seemed to have the best results. However poor results slightly improved
+are still poor results.
+
+Changing the \mintinline{python}{numpy.random.choice} function to sample with and without
+replacement did not seem to have a substantial impact on the end solution, so I chose to sample
+without replacement because I'm cruel and merciless.
+
+To fix this behavior, I think the simple implementation
+\begin{minted}{python}
+    def stochastic_selection(population, size, func, cities):
+        """Randomly select the most fit from the given population.
+
+        Select without replacement an individual with probability
+        proportional to its fitness.
+
+        :param population: The population to cull.
+        :param size: The desired size of the population.
+        :param func: The fitness function to rank the population by.
+        :param cities: The array of city locations.
+        :returns: The culled population, unsorted.
+        """
+        fitnesses = np.array([func(cities, p) for p in population])
+        probabilities = fitnesses / np.sum(fitnesses)
+        survivors = np.random.choice(len(population), size, replace=False, p=probabilities)
+        return population[survivors]
+\end{minted}
+should be modified to not kill the very best individuals, or should use a probability distribution
+more heavily weighted towards the top than a uniform distribution weighted by an individual's
+fitness. Another option would be to decrease the randomness in the selection as time progresses, as
+does simulated annealing. This, combined with some kind of convergence criterion would be the best
+option, but more difficult to implement than what I'm willing to tackle with only half of my
+homework done and the deadline quickly approaching.
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{prob2/figures/prob2-fitness-deterministic.pdf}
+        \caption{Fitness over time}\label{fig:prob2:deterministic-fitness}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{prob2/figures/prob2-best-deterministic.pdf}
+        \caption{The best solution}\label{fig:prob2:deterministic-best}
+    \end{subfigure}
+    \caption{The deterministic selection operator results}\label{fig:prob2:deterministic-selection}
+\end{figure}
+
+Notice from \autoref{fig:prob2:deterministic-fitness} that the fitness of the best individual over
+time, when using deterministic selection, grows steadily before tapering off. Also notice that it
+tapers off at a value almost double that of the highest peak of
+\autoref{fig:prob2:stochastic-fitness}. We can plainly see that the best individual found, shown in
+\autoref{fig:prob2:deterministic-best}, is a much more reasonable solution than that of stochastic
+selection displayed in \autoref{fig:prob2:stochastic-best}.
+
+However, there are still improvements that can be picked out visually.\footnote{Again, each
+    run produces different figures, so this statement was true when I wrote it.} We might be able
+to improve on this solution method by using a different mutation operator, but none of the ones
+listed in \autoref{sec:mutation-methods} yielded any better results.
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{prob2/figures/prob2-simulated-annealing-fitness.pdf}
+        \caption{}\label{fig:prob2:simulated-annealing-fitness}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{prob2/figures/prob2-simulated-annealing.pdf}
+        \caption{}\label{fig:prob2:simulated-annealing-best}
+    \end{subfigure}
+    \caption{The simulated annealing results}\label{fig:prob2:simulated-annealing}
+\end{figure}
+
+Simulated annealing produced results similar in quality to the evolutionary algorithm, with
+deterministic selection, and much better results than with the stochastic selection operator.
+Further, the simulated annealing algorithm terminates \textit{much} faster than the evolutionary
+algorithm. This is expected, due to the amount of work being done, because the simulated annealing
+algorithm works on a single individual, while the evolutionary algorithms work on an entire
+population.
+
+There are a number of tuneable parameters that I played with. There are, in my implementation,
+\begin{itemize}
+    \item The transformation on the fitness function
+    \item The mutation operator
+    \item Deterministic/stochastic selection
+    \item Population size
+    \item Number of generations
+\end{itemize}
+The transformation of the fitness function (simple negation or inversion) \textit{seemed} to have
+an effect, but nothing measured. The mutation operator had a substantial impact, with the best one
+being the sublist inversion. Using a deterministic selection operator consistently yielded the best
+results. Being slightly impatient, I did not experiment with very large populations or large
+numbers of generations. I think there is some parallelism that I could have taken advantage of to
+make it easier to wait, but moving on to \autoref{prob:3} is currently more important.
 
 \section{The TSP with Mutation and Recombination}\label{prob:3}
 
