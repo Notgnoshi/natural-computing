@@ -591,8 +591,8 @@ mutation and (in \autoref{prob:3}) recombination operators on. In this represent
 generate a starting collection of cities with
 
 \begin{minted}{python}
-    def generate_seed(n, scale=100):
-        """Generates a starting seed of the given size.
+    def generate_cities(n, scale=100):
+        """Generates an array of cities of the given size.
 
         Pick random coordinates in the `scale`x`scale` grid uniformly.
 
@@ -606,27 +606,27 @@ generate a starting collection of cities with
 and a random population of different orderings for a collection of cities with
 
 \begin{minted}{python}
-    def generate_population(seed, size, scale=100):
+    def generate_population(cities, size, scale=100):
         """Generate a population of individuals with the given size.
 
-        Pick random coordinates in the `scale`x`scale` grid uniformly.
+        Each individual is an array of indices into the given cities array.
 
-        :param seed: An unsorted array of city locations.
+        :param cities: An unsorted array of city locations.
         :param size: The number of individuals to generate.
         :param scale: How much to scale the individual's coordinates by.
         """
-        population = np.zeros((size, *seed.shape))
+        n = len(cities)
+        population = np.zeros((size, n), dtype=int)
         for i in range(size):
-            individual = np.copy(seed)
+            individual = np.arange(n, dtype=int)
             np.random.shuffle(individual)
             population[i] = individual
         return population
 \end{minted}
 
-Note that this is memory inefficient. I believe that there should be a way to use an array of
-shuffled indices as your population, and then implement the fitness function in such a way that it
-knows how to retrieve the location of a city from its index. However, it runs well enough that I
-won't change it now.
+Note that in this representation, an individual is a list of indices into the
+\mintinline{python}{cities} array. This is to prevent repeatedly duplicating the array of the same
+cities in different orders.
 
 The \mintinline{python}{generate_individual()} function generates a single individual as shown in
 \autoref{fig:prob2:random-individual}.
@@ -661,21 +661,27 @@ helpful to use the
 \end{minted}
 Then the fitness function for an individual can be written succinctly as
 \begin{minted}{python}
-    def fitness(individual):
-        """Evaluate the fitness of the given individual.
+    def fitness(cities, path):
+        """Evaluate the fitness of the given path.
 
-        Compute the Euclidean distance between every pair of cities in the individual
+        Compute the Euclidean distance between every pair of cities in the path
         and add them together.
 
-        :param individual: An array of cities, where each city is an (x, y) pair.
-        :type individual: np.ndarray with shape (n, 2)
-        :return: The fitness of the individual.
+        :param cities: The array of cities through which to compute a path.
+        :param path: The path through the given cities to compute the fitness for.
+        :returns: The fitness of the individual.
         """
-        return -sum(np.linalg.norm(c1 - c2) for c1, c2 in pairwise(individual))
+        individual = cities[path]
+        return 1 / sum(np.linalg.norm(c1 - c2) for c1, c2 in pairwise(individual))
 \end{minted}
 
-Note that the sum is negated, because we want to \textit{minimize} the fitness.\todo{What happens
-    if it isn't negated? I couldn't even begin to guess.}
+Note that the sum is inverted, because we want to \textit{minimize} the fitness. I also played
+around with simply negating the fitness, which worked quite well in some cases. However, in the
+stochastic selection discussed below, I wanted to further separate the good individuals from the
+poor individuals. Inverting the fitness seemed to have a good result.\footnote{What happens if you
+    leave the fitness alone, without negating or inverting? I couldn't even \textit{begin} to
+    guess, although I'm sure a naive student might spend hours and hours wondering why their
+    implementation was giving them the exact opposite of what they wanted.}
 
 \subsubsection{Mutation Methods}
 There are a number of possible mutation operators that will work on the chosen solution
@@ -687,13 +693,13 @@ than direct scalar values.
 
 \paragraph{Swap Mutation} This mutation randomly swaps two cities in the tour.
 \begin{minted}{python}
-    def swap_mutation(individual):
-        """Swap two random cities in the individual.
+    def swap_mutation(path):
+        """Swap two random cities in the path.
 
         Returns a new mutated copy of the given array.
         """
         # Arrays are (kind of) passed by reference in Python.
-        x = np.copy(individual)
+        x = np.copy(path)
         # Generate two valid indices to swap.
         i = np.random.randint(0, len(x) - 2)
         j = np.random.randint(i, len(x) - 1)
@@ -708,16 +714,16 @@ than direct scalar values.
 \paragraph{Insertion Mutation} This mutation is similar to a swap. It picks a random city, removes
 it from the list, and inserts it at some randomly selected position.
 \begin{minted}{python}
-    def insertion_mutation(individual):
+    def insertion_mutation(path):
         """Insert a random value in the list somewhere else in the list.
 
         Returns a new mutated copy of the given array.
         """
-        i = np.random.randint(0, len(individual) - 2)
-        j = np.random.randint(i, len(individual) - 1)
+        i = np.random.randint(0, len(path) - 2)
+        j = np.random.randint(i, len(path) - 1)
         # Delete the element at index j and insert it before index i.
-        temp = np.delete(individual, j, axis=0)
-        temp = np.insert(temp, i, individual[j], axis=0)
+        temp = np.delete(path, j, axis=0)
+        temp = np.insert(temp, i, path[j], axis=0)
 
         return temp
 \end{minted}
@@ -725,17 +731,17 @@ it from the list, and inserts it at some randomly selected position.
 \paragraph{Displacement Mutation} This is a natural extension of the insertion mutation. Rather
 than removing and inserting a single city, remove and insert an entire subpath.
 \begin{minted}{python}
-    def displacement_mutation(individual):
+    def displacement_mutation(path):
         """Inserts a random subarray in the list somewhere else.
 
         Returns a new mutated copy of the given array.
         """
         # Pick a random subarray
-        i = np.random.randint(0, len(individual) - 2)
-        j = np.random.randint(i, len(individual) - 1)
-        subarray = individual[i:j]
+        i = np.random.randint(0, len(path) - 2)
+        j = np.random.randint(i, len(path) - 1)
+        subarray = path[i:j]
         # Delete the given subarray
-        tmp = np.delete(individual, range(i, j), axis=0)
+        tmp = np.delete(path, range(i, j), axis=0)
         k = np.random.randint(0, len(tmp) - 1)
 
         return np.insert(tmp, k, subarray, axis=0)
@@ -744,15 +750,15 @@ than removing and inserting a single city, remove and insert an entire subpath.
 \paragraph{Shuffle Mutation} This mutation is not used much, because it can destroy good genetic
 information in a parent. It picks a random subpath in a solution and shuffles it.
 \begin{minted}{python}
-    def shuffle_mutation(individual):
-        """Shuffles a random subarray in the given individual.
+    def shuffle_mutation(path):
+        """Shuffles a random subarray in the given path.
 
         Returns a new mutated copy of the given array.
         """
         # Pick a random subarray
-        i = np.random.randint(0, len(individual) - 2)
-        j = np.random.randint(i, len(individual) - 1)
-        x = np.copy(individual)
+        i = np.random.randint(0, len(path) - 2)
+        j = np.random.randint(i, len(path) - 1)
+        x = np.copy(path)
         np.random.shuffle(x[i:j])
 
         return x
@@ -765,14 +771,14 @@ mutations can be implemented as a sequence of inversions. A proof of this remark
 \autoref{app:proof}. This mutation can also be extended to act like the displacement mutation where
 a random subpath is removed, inverted, and reinserted somewhere else in the tour.
 \begin{minted}{python}
-    def inversion_mutation(individual):
-        """Inverts a random subarray in the given individual.
+    def inversion_mutation(path):
+        """Inverts a random subarray in the given path.
 
         Returns a new mutated copy of the given array.
         """
-        i = np.random.randint(0, len(individual) - 2)
-        j = np.random.randint(i, len(individual) - 1)
-        x = np.copy(individual)
+        i = np.random.randint(0, len(path) - 2)
+        j = np.random.randint(i, len(path) - 1)
+        x = np.copy(path)
         # Invert the subarray.
         x[i:j] = x[i:j][::-1]
 
@@ -782,7 +788,7 @@ a random subpath is removed, inverted, and reinserted somewhere else in the tour
 Given these mutation methods, I define the \mintinline{python}{mutate()} function for ease of use.
 
 \begin{minted}{python}
-    def mutate(individual, method='inversion'):
+    def mutate(path, method='inversion'):
         """Mutate the given individual via the given method.
 
         Returns a new mutated copy of the given array.
@@ -797,7 +803,7 @@ Given these mutation methods, I define the \mintinline{python}{mutate()} functio
             'shuffle': shuffle_mutation,
             'inversion': inversion_mutation,
         }
-        return methods[method](individual)
+        return methods[method](path)
 \end{minted}
 
 \subsubsection{Selection Methods}
@@ -809,7 +815,7 @@ population by their fitness and select the top $n$ to survive.
 
 We can implement deterministic selection by
 \begin{minted}{python}
-    def deterministic_selection(population, size, func):
+    def deterministic_selection(population, size, func, cities):
         """Deterministically select the most fit from the given population.
 
         Use the given fitness function to rank the population, then pick
@@ -820,16 +826,17 @@ We can implement deterministic selection by
         :param population: The population to cull.
         :param size: The desired size of the population.
         :param func: The fitness function to rank the population by.
+        :param cities: The array of city locations.
         :returns: The culled population, sorted upwards in increasing fitness.
         """
-        fitnesses = np.array([func(p) for p in population])
+        fitnesses = np.array([func(cities, p) for p in population])
         indices = np.argsort(fitnesses, axis=0)
         euthanize = len(population) - size
         return population[indices][euthanize:]
 \end{minted}
 stochastic selection by
 \begin{minted}{python}
-    def stochastic_selection(population, size, func):
+    def stochastic_selection(population, size, func, cities):
         """Randomly select the most fit from the given population.
 
         Select without replacement an individual with probability
@@ -838,21 +845,23 @@ stochastic selection by
         :param population: The population to cull.
         :param size: The desired size of the population.
         :param func: The fitness function to rank the population by.
+        :param cities: The array of city locations.
         :returns: The culled population, unsorted.
         """
-        fitnesses = np.array([func(p) for p in population])
+        fitnesses = np.array([func(cities, p) for p in population])
         probabilities = fitnesses / np.sum(fitnesses)
         survivors = np.random.choice(len(population), size, replace=False, p=probabilities)
         return population[survivors]
 \end{minted}
 and finally, a nice helper function
 \begin{minted}{python}
-    def select(population, size, func, method='deterministic'):
+    def select(population, size, func, cities, method='deterministic'):
         """Select the `size` most fit from the given population.
 
         :param population: The population to cull.
         :param size: The desired size of the population.
         :param func: The fitness function to rank the population by.
+        :param cities: The array of city locations.
         :param method: One of 'deterministic' or 'stochastic'.
         :returns: The culled population, in arbitrary order.
         """
@@ -860,13 +869,105 @@ and finally, a nice helper function
             'stochastic': stochastic_selection,
             'deterministic': deterministic_selection,
         }
-        return methods[method](population, size, func)
+        return methods[method](population, size, func, cities)
 \end{minted}
 
 \todoinline{Consider modifying the stochastic selection so that it can't throw away the top few?}
 
 \subsubsection{The Evolutionary Algorithm}
-\todoinline{Copy-paste implementation and add commentary.}
+With all of the above snippets defined, implementing the evolutionary algorithm listed in
+\autoref{alg:standard-ea} (without recombination) can be done simply as
+
+\begin{minted}{python}
+    def simple_ea(cities, size, func, iters, mutation='inversion', selection='deterministic'):
+        """Run the standard evolutionary algorithm to solve the TSP.
+
+        This implementation does not use recombination.
+
+        :param cities: The array of city locations.
+        :param size: The population size to use.
+        :param func: The fitness function to use.
+        :param iters: The number of iterations (generations) to run.
+        :param mutation: The type of mutation to use. One of 'swap', 'insertion',
+        'displacement', 'shuffle', or 'inversion'.
+        :param selection: The type of selection to use. One of 'deterministic',
+        or 'stochastic'.
+        """
+        n = len(cities)
+        population = generate_population(cities, size)
+        best_fitnesses = np.zeros(iters)
+        best_individuals = np.zeros((iters, n), dtype=int)
+        for i in range(iters):
+            # Do not recombine population.
+            mutations = np.array([mutate(p, method=mutation) for p in population], dtype=int)
+            # This is a $(\mu + \lambda)$ selection.
+            combined = np.concatenate((population, mutations))
+            population = select(combined, size, func, cities, method=selection)
+            fitnesses = np.array([func(cities, p) for p in population])
+            # Record the current best individual
+            best = fitnesses.argmax()
+            best_fitnesses[i] = fitnesses[best]
+            best_individuals[i] = population[best]
+
+        return best_fitnesses, best_individuals
+\end{minted}
+
+Note that this implementation does not have a convergence criterion. It simply runs for the
+specified number of iterations.
+
+\subsubsection{Simulated Annealing}
+Since we talked about it in class, and we essentially already have the code for this problem, I
+went ahead and implemented simulated annealing by tweaking the example given in class to satisfy my
+sensibilities.
+
+\begin{minted}{python}
+    def evaluate(tour):
+        """Evaluate the length of the given tour.
+
+        Compute the Euclidean distance between every pair of cities in the tour
+        and add them together.
+
+        :param tour: An array of cities, where each city is n (x, y) pair.
+        """
+        return sum(np.linalg.norm(c1 - c2) for c1, c2 in pairwise(tour))
+
+    def perturb(x):
+        """Perturb the given array.
+
+        Perform a sublist inversion in the interior of the given array.
+
+        :param x: The array to perturb. Is not modified.
+        """
+        # Compute two random indices, avoiding the endpoints.
+        i = np.random.randint(0, len(x) - 2)
+        j = np.random.randint(i, len(x) - 1)
+        # Produce a copy of the given array and invert a random sublist inside.
+        y = np.copy(x)
+        y[i:j] = y[i:j][::-1]
+        return y
+
+    def simulated_annealing(cities, temperature=800, cooling_factor=0.001):
+        """Run the simulated annealing algorithm to solve the TSP.
+
+        :param cities: An array of (x, y) city coordinates.
+        :param temperature: The starting temperature of the system, defaults to 800
+        :param cooling_factor: How quickly to cool the system, defaults to 0.001
+        """
+        current = evaluate(cities)
+        energies = [current]
+        while temperature > 0.001:
+            new_solution = perturb(cities)
+            energy = evaluate(new_solution)
+            if np.random.random() < np.exp((current - energy) / temperature)
+                cities = new_solution
+                current = energy
+                energies.append(current)
+            temperature *= 1 - cooling_factor
+        return cities, np.array(energies)
+\end{minted}
+
+Note that this implementation uses the uninverted fitness function, so in order to compare apples
+to pears and grapefruit to plums, the returned array of fitnesses must be inverted as well.
 
 \subsection{Results}
 \todoinline{
