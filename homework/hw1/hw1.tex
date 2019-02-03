@@ -1110,6 +1110,306 @@ deterministic and stochastic selection operators.
 
     Implement crossover.
 }
+As mentioned in \autoref{prob:2}, I found a paper~\cite{tsp_ea} listing many different mutation and
+recombination operators on the simple ordered-path encoding for a solution to the TSP. I used the
+same mutation and selection operators given in \autoref{sec:mutation-methods}. The interesting
+stuff in this problem are the recombination operators given in~\cite{tsp_ea}.
+
+\subsubsection{Partially-Mapped Crossover (PMX)}
+According to~\cite{tsp_ea}, the PMX crossover is the most widely used recombination operator for
+path-type problems. This operator combines parents $P_1$ and $P_2$ to get children $C_1$ and $C_2$.
+The second child is produced in exactly the same manner as the first, but with the parents swapped.
+It works as follows
+\begin{enumerate}
+    \item Choose two crossover points at random, and copy the sublist between them from $P_1$ into
+          $C_1$ at the same location.\footnote{God damn it, these are really simple pictures, and
+              were very easy to make, but to get nice colors took about 5 hours longer than it
+              should have.}
+          \begin{figure}[H]
+              \centering
+              \begin{tikzpicture}[font=\ttfamily,
+                      array/.style={
+                              matrix of nodes,
+                              nodes={
+                                      draw,
+                                      anchor=center,
+                                      minimum size=7mm,
+                                      inner sep=0pt
+                                  },
+                              column sep=-\pgflinewidth,
+                              row sep=-\pgflinewidth,
+                              nodes in empty cells
+                          }]
+
+                  \matrix[array] (P1) {
+                      1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\
+                  };
+                  \matrix[array, below of=P1, yshift=-1cm] (P2) {
+                      9 & 3 & 7 & 8 & 2 & 6 & 5 & 1 & 4 \\
+                  };
+
+                  \matrix[array, right of=P2-1-9, anchor=west, yshift=1cm] (C1) {
+                       &  &  & 4 & 5 & 6 & 7 &  & \\
+                  };
+                  \node[left of=P1-1-1] {$P_1$};
+                  \node[left of=P2-1-1] {$P_2$};
+                  \node[right of=C1-1-9] {$C_1$};
+
+                  % Highlight the sublist.
+                  \begin{scope}[on background layer]
+                      \fill[__minted_background_color] (P1-1-1.north west) rectangle (P1-1-9.south
+                      east);
+                      \fill[__minted_highlight_color] (P1-1-4.north west) rectangle (P1-1-7.south
+                      east);
+                      \fill[__minted_background_color] (P2-1-1.north west) rectangle (P2-1-9.south
+                      east);
+                      \fill[__minted_highlight_color] (P2-1-4.north west) rectangle (P2-1-7.south
+                      east);
+                      \fill[__minted_background_color] (C1-1-1.north west) rectangle (C1-1-9.south
+                      east);
+                      \fill[__minted_highlight_color] (C1-1-4.north west) rectangle (C1-1-7.south
+                      east);
+                  \end{scope}
+              \end{tikzpicture}
+              \caption{Step 1, copy subarray}\label{fig:prob3:pmx-step-1}
+          \end{figure}
+    \item Starting from the first crossover point, look for elements of $P_2$ that were not copied
+          to $C_1$.
+          \begin{figure}[H]
+              \centering
+              \begin{tikzpicture}[font=\ttfamily,
+                      array/.style={
+                              matrix of nodes,
+                              nodes={
+                                      draw,
+                                      anchor=center,
+                                      minimum size=7mm,
+                                      inner sep=0pt
+                                  },
+                              column sep=-\pgflinewidth,
+                              row sep=-\pgflinewidth,
+                              nodes in empty cells
+                          }]
+
+                  \matrix[array] (P1) {
+                      1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\
+                  };
+                  \matrix[array, below of=P1, yshift=-1cm] (P2) {
+                      9 & 3 & 7 & 8 & 2 & 6 & 5 & 1 & 4 \\
+                  };
+
+                  \matrix[array, right of=P2-1-9, anchor=west, yshift=1cm] (C1) {
+                       &  &  & 4 & 5 & 6 & 7 &  & \\
+                  };
+                  \node[left of=P1-1-1] {$P_1$};
+                  \node[left of=P2-1-1] {$P_2$};
+                  \node[right of=C1-1-9] {$C_1$};
+
+                  % Highlight the sublist.
+                  \begin{scope}[on background layer]
+                      \fill[__minted_background_color] (P1-1-1.north west) rectangle (P1-1-9.south
+                      east);
+                      \fill[__minted_highlight_color] (P1-1-4.north west) rectangle (P1-1-7.south
+                      east);
+                      \fill[__minted_background_color] (P2-1-1.north west) rectangle (P2-1-9.south
+                      east);
+                      \fill[__minted_highlight_color] (P2-1-4.north west) rectangle (P2-1-7.south
+                      east);
+                      \fill[__minted_background_color] (C1-1-1.north west) rectangle (C1-1-9.south
+                      east);
+                      %   \fill[__minted_highlight_color] (C1-1-4.north west) rectangle (C1-1-7.south
+                      %   east);
+                      \fill[red!30] (P2-1-4.north west) rectangle (P2-1-5.south east);
+                  \end{scope}
+              \end{tikzpicture}
+              \caption{Step 2, find uncopied elements}\label{fig:prob3:pmx-step-2}
+          \end{figure}
+    \item For each of these non-copied elements $i$, find the element $j$ of the first parent that
+          was copied in place of $i$. Place $i$ into the position occupied by $j$ in $P_2$.
+          \begin{figure}[H]
+              \centering
+              \begin{tikzpicture}[
+                      font=\ttfamily,
+                      array/.style={
+                              matrix of nodes,
+                              nodes={
+                                      draw,
+                                      anchor=center,
+                                      minimum size=7mm,
+                                      inner sep=0pt
+                                  },
+                              column sep=-\pgflinewidth,
+                              row sep=-\pgflinewidth,
+                              nodes in empty cells
+                          },
+                      >=stealth]
+
+                  \matrix[array] (P1) {
+                      1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\
+                  };
+                  \matrix[array, below of=P1, yshift=-1cm] (P2) {
+                      9 & 3 & 7 & 8 & 2 & 6 & 5 & 1 & 4 \\
+                  };
+
+                  \matrix[array, right of=P2-1-9, anchor=west, yshift=1cm] (C1) {
+                       &  &  & 4 & 5 & 6 & 7 &  & 4 \\
+                  };
+                  \node[left of=P1-1-1] {$P_1$};
+                  \node[left of=P2-1-1] {$P_2$};
+                  \node[right of=C1-1-9] {$C_1$};
+
+                  \draw[->] (P2-1-4) edge (P1-1-4) (P1-1-4.south) edge (P2-1-9.north);
+
+                  % Highlight the sublist.
+                  \begin{scope}[on background layer]
+                      \fill[__minted_background_color] (P1-1-1.north west) rectangle (P1-1-9.south
+                      east);
+                      \fill[__minted_highlight_color] (P1-1-4.north west) rectangle (P1-1-7.south
+                      east);
+                      \fill[__minted_background_color] (P2-1-1.north west) rectangle (P2-1-9.south
+                      east);
+                      \fill[__minted_highlight_color] (P2-1-4.north west) rectangle (P2-1-7.south
+                      east);
+                      \fill[__minted_background_color] (C1-1-1.north west) rectangle (C1-1-9.south
+                      east);
+                      \fill[red!30] (P2-1-4.north west) rectangle (P2-1-5.south east);
+                      \fill[__minted_highlight_color] (P2-1-9.north west) rectangle (P2-1-9.south
+                      east);
+                      \fill[__minted_highlight_color] (C1-1-9.north west) rectangle (C1-1-9.south
+                      east);
+                  \end{scope}
+              \end{tikzpicture}
+              \caption{Step 2, find uncopied elements}\label{fig:prob3:pmx-step-2}
+          \end{figure}
+    \item If the position occupied by $j$ in $P_2$ has already been filled in $C_1$ by an element
+          $k$, put $i$ in the position occupied by $k$ in $P_2$.
+          \begin{figure}[H]
+              \centering
+              \begin{tikzpicture}[
+                      font=\ttfamily,
+                      array/.style={
+                              matrix of nodes,
+                              nodes={
+                                      draw,
+                                      anchor=center,
+                                      minimum size=7mm,
+                                      inner sep=0pt
+                                  },
+                              column sep=-\pgflinewidth,
+                              row sep=-\pgflinewidth,
+                              nodes in empty cells
+                          },
+                      >=stealth]
+
+                  \matrix[array] (P1) {
+                      1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\
+                  };
+                  \matrix[array, below of=P1, yshift=-1cm] (P2) {
+                      9 & 3 & 7 & 8 & 2 & 6 & 5 & 1 & 4 \\
+                  };
+
+                  \matrix[array, right of=P2-1-9, anchor=west, yshift=1cm] (C1) {
+                       &  & 7 & 4 & 5 & 6 & 7 &  & 4 \\
+                  };
+                  \node[left of=P1-1-1] {$P_1$};
+                  \node[left of=P2-1-1] {$P_2$};
+                  \node[right of=C1-1-9] {$C_1$};
+
+                  \draw[->] (P2-1-5) edge (P1-1-5) (P1-1-5.south) edge (P2-1-7.north) (P2-1-7) edge (P1-1-7) (P1-1-7.south) edge (P2-1-3.north);
+
+                  % Highlight the sublist.
+                  \begin{scope}[on background layer]
+                      \fill[__minted_background_color] (P1-1-1.north west) rectangle (P1-1-9.south
+                      east);
+                      \fill[__minted_highlight_color] (P1-1-4.north west) rectangle (P1-1-7.south
+                      east);
+                      \fill[__minted_background_color] (P2-1-1.north west) rectangle (P2-1-9.south
+                      east);
+                      \fill[__minted_highlight_color] (P2-1-4.north west) rectangle (P2-1-7.south
+                      east);
+                      \fill[__minted_background_color] (C1-1-1.north west) rectangle (C1-1-9.south
+                      east);
+                      %   \fill[__minted_highlight_color] (C1-1-4.north west) rectangle (C1-1-7.south
+                      %   east);
+                      \fill[red!30] (P2-1-5.north west) rectangle (P2-1-5.south east);
+                      \fill[__minted_highlight_color] (P2-1-9.north west) rectangle (P2-1-9.south
+                      east);
+                      %   \fill[__minted_highlight_color] (C1-1-9.north west) rectangle (C1-1-9.south
+                      %   east);
+                      \fill[__minted_highlight_color] (P2-1-3.north west) rectangle (P2-1-3.south
+                      east);
+                      \fill[__minted_highlight_color] (C1-1-3.north west) rectangle (C1-1-3.south
+                      east);
+                  \end{scope}
+              \end{tikzpicture}
+              \caption{Step 3, find better uncopied elements}\label{fig:prob3:pmx-step-3}
+          \end{figure}
+    \item Once each of the uncopied portions of $P_2$'s sublist have been placed, fill the
+          remaining positions from $P_2$.
+          \begin{figure}[H]
+              \centering
+              \begin{tikzpicture}[font=\ttfamily,
+                      array/.style={
+                              matrix of nodes,
+                              nodes={
+                                      draw,
+                                      anchor=center,
+                                      minimum size=7mm,
+                                      inner sep=0pt
+                                  },
+                              column sep=-\pgflinewidth,
+                              row sep=-\pgflinewidth,
+                              nodes in empty cells
+                          }]
+
+                  \matrix[array] (P1) {
+                      1 & 2 & 3 & 4 & 5 & 6 & 7 & 8 & 9 \\
+                  };
+                  \matrix[array, below of=P1, yshift=-1cm] (P2) {
+                      9 & 3 & 7 & 8 & 2 & 6 & 5 & 1 & 4 \\
+                  };
+
+                  \matrix[array, right of=P2-1-9, anchor=west, yshift=1cm] (C1) {
+                      9 & 3 & 2 & 4 & 5 & 6 & 7 & 1 & 8 \\
+                  };
+                  \node[left of=P1-1-1] {$P_1$};
+                  \node[left of=P2-1-1] {$P_2$};
+                  \node[right of=C1-1-9] {$C_1$};
+
+                  % Highlight the sublist.
+                  \begin{scope}[on background layer]
+                      \fill[__minted_background_color] (P1-1-1.north west) rectangle (P1-1-9.south
+                      east);
+                      \fill[__minted_background_color] (P2-1-1.north west) rectangle (P2-1-9.south
+                      east);
+                      \fill[__minted_background_color] (C1-1-1.north west) rectangle (C1-1-9.south
+                      east);
+                      \fill[__minted_highlight_color] (P1-1-4.north west) rectangle (P1-1-7.south
+                      east);
+                      \fill[__minted_highlight_color] (P2-1-3.north west) rectangle (P2-1-7.south
+                      east);
+                      \fill[__minted_highlight_color] (P2-1-9.north west) rectangle (P2-1-9.south
+                      east);
+
+                      \fill[__minted_highlight_color] (C1-1-1.north west) rectangle (C1-1-2.south
+                      east);
+                      \fill[__minted_highlight_color] (C1-1-8.north west) rectangle (C1-1-8.south
+                      east);
+                  \end{scope}
+              \end{tikzpicture}
+              \caption{Step 4, fill in the rest of $P_2$}\label{fig:prob3:pmx-step-4}
+          \end{figure}
+\end{enumerate}
+
+The second child $C_2$ is created in the same manner, with parents swapped.
+
+\subsubsection{Order Crossover (OX)}
+\todoinline{I have run out of motivation. I'll implement the PMX crossover and the stack encoding, but that's it.}
+\subsubsection{Maximal Preservative Crossover (MPX)}
+\subsubsection{Cycle Crossover (CX)}
+\subsubsection{Position Base Crossover (PBX)}
+\subsubsection{Heuristic Crossover (HX)}
+\subsubsection{Edge Recombination Crossover (ERX)}
 
 \subsection{Results}
 \todoinline{
