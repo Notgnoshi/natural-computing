@@ -1279,7 +1279,7 @@ It works as follows
                       east);
                   \end{scope}
               \end{tikzpicture}
-              \caption{Step 2, find uncopied elements}\label{fig:prob3:pmx-step-2}
+              \caption{Step 3, find a free spot to stuff things}\label{fig:prob3:pmx-step-3}
           \end{figure}
     \item If the position occupied by $j$ in $P_2$ has already been filled in $C_1$ by an element
           $k$, put $i$ in the position occupied by $k$ in $P_2$.
@@ -1315,7 +1315,8 @@ It works as follows
                   \node[left of=P2-1-1] {$P_2$};
                   \node[right of=C1-1-9] {$C_1$};
 
-                  \draw[->] (P2-1-5) edge (P1-1-5) (P1-1-5.south) edge (P2-1-7.north) (P2-1-7) edge (P1-1-7) (P1-1-7.south) edge (P2-1-3.north);
+                  \draw[->] (P2-1-5) edge (P1-1-5) (P1-1-5.south) edge (P2-1-7.north) (P2-1-7) edge
+                  (P1-1-7) (P1-1-7.south) edge (P2-1-3.north);
 
                   % Highlight the sublist.
                   \begin{scope}[on background layer]
@@ -1342,7 +1343,7 @@ It works as follows
                       east);
                   \end{scope}
               \end{tikzpicture}
-              \caption{Step 3, find better uncopied elements}\label{fig:prob3:pmx-step-3}
+              \caption{Step 4, find better uncopied elements}\label{fig:prob3:pmx-step-4}
           \end{figure}
     \item Once each of the uncopied portions of $P_2$'s sublist have been placed, fill the
           remaining positions from $P_2$.
@@ -1397,26 +1398,326 @@ It works as follows
                       east);
                   \end{scope}
               \end{tikzpicture}
-              \caption{Step 4, fill in the rest of $P_2$}\label{fig:prob3:pmx-step-4}
+              \caption{Step 5, fill in the rest of $P_2$}\label{fig:prob3:pmx-step-5}
           \end{figure}
 \end{enumerate}
 
-The second child $C_2$ is created in the same manner, with parents swapped.
+The second child $C_2$ is created in the same manner, with parents swapped. This crossover operator
+was surprisingly tricky to implement, and especially so with Numpy arrays over the usual Python
+lists due to missing functionality.
+
+\begin{minted}{python}
+    def pmx(mom, dad):
+        """Recombination using the Partially-Mapped Crossover algorithm.
+
+        :param mom: The first parent.
+        :type mom: list
+        :param dad: The second parent.
+        :type dad: list
+        :returns: The recombined child.
+        :rtype: list
+        """
+        # Pick a random chunk 1/3 the length of mom's genes to flat-out copy.
+        l = len(mom) // 3
+        i = np.random.randint(0, len(mom) - l)
+        j = i + l
+        child = [0] * len(mom)
+        sublist1 = mom[i:j]
+        sublist2 = dad[i:j]
+        # Copy a chunk of mom's genes.
+        child[i:j] = sublist1
+        copied = set(sublist1)
+        non_copied = (e for e in sublist2 if e not in sublist1)
+
+        # Find a place for each element of dad's gene that won't clobber mom's.
+        for elem in non_copied:
+            # Get the index of the element in the dad array.
+            idx = dad.index(elem)
+            # Find a spot that won't be taken.
+            while mom[idx] in copied:
+                idx = dad.index(mom[idx])
+            # Copy the element into the child.
+            child[idx] = elem
+            copied.add(elem)
+
+        # Add the rest of dad's genes.
+        for i in range(len(mom)):
+            if dad[i] not in copied:
+                child[i] = dad[i]
+                copied.add(dad[i])
+        return child
+\end{minted}
 
 \subsubsection{Order Crossover (OX)}
-\todoinline{I have run out of motivation. I'll implement the PMX crossover and the stack encoding, but that's it.}
+\todoinline{I have run out of motivation. I'll implement the PMX crossover and the stack encoding,
+    but that's it.}
 \subsubsection{Maximal Preservative Crossover (MPX)}
 \subsubsection{Cycle Crossover (CX)}
 \subsubsection{Position Base Crossover (PBX)}
 \subsubsection{Heuristic Crossover (HX)}
 \subsubsection{Edge Recombination Crossover (ERX)}
 
-\subsection{Results}
-\todoinline{
-    Compare selection operators.
+\subsubsection{Mutation and Recombination with the Stack Encoding}
+Given a genome encoded via the stack encoding, we can decode the corresponding phenome with
+\begin{minted}{python}
+    def decode(n, genome):
+        """Decode a given stack-encoded genome.
 
-    Compare recombination operators.
-}
+        :param n: The number of city locations.
+        :param genome: The genome to decode into a phenome.
+        :returns: The indices for a valid tour path.
+        """
+        cities = list(range(n))
+        phenome = []
+        for allele in genome:
+            idx = allele % len(cities)
+            phenome.append(cities[idx])
+            cities.pop(idx)
+        return phenome
+\end{minted}
+Now the traditional point mutation and splicing recombination will result in valid paths.
+
+\begin{minted}{python}
+    def stackx(mom, dad):
+        """Recombination with stack encoding."""
+        return mom[:len(mom) // 2] + dad[len(dad) // 2:]
+\end{minted}
+
+\begin{minted}{python}
+    def recombine(mom, dad, encoding='stack'):
+        methods = {
+            'path': pmx,
+            'stack': stackx,
+        }
+        return methods[encoding](mom, dad)
+\end{minted}
+
+Since I'm implementing this problem using plain Python lists, almost everything from
+\autoref{prob:2} needs to be redefined.
+
+\begin{minted}{python}
+    def generate_cities(n, scale=100):
+        return np.random.rand(n, 2) * scale
+
+    def generate_population(sities, size):
+        n = len(cities)
+        population = [0] * size
+        for i in range(size):
+            individual = list(range(n))
+            random.shuffle(individual)
+            population[i] = individual
+        return population
+\end{minted}
+
+The fitness function needs to be aware of the solution encoding.
+
+\begin{minted}{python}
+    def fitness(cities, path, encoding='path'):
+        """Evaluate the fitness of the given path.
+
+        Compute the Euclidean distance between every pair of cities in the path
+        and add them together.
+
+        :param cities: The array of cities through which to compute a path.
+        :param path: The path through the given cities to compute the fitness for.
+        :param encoding: One of 'path' or 'stack'.
+        :returns: The fitness of the individual.
+        """
+        if encoding == 'path':
+            individual = cities[path]
+        elif encoding == 'stack':
+            individual = cities[decode(path)]
+        else:
+            raise ValueError('invalid encoding')
+        return 1 / sum(np.linalg.norm(c1 - c2) for c1, c2 in pairwise(individual))
+\end{minted}
+
+I experimented with different mutations, but with the stack encoding a simple random swap (as
+opposed to an inversion) seemed to work best.
+
+\begin{minted}{python}
+    def mutate(path):
+        i = np.random.randint(0, len(path) - 1)
+        j = np.random.randint(i, len(path))
+        x = path.copy()
+        # Swap two random elements.
+        x[i], x[j] = x[j], x[i]
+
+        return x
+\end{minted}
+
+Then the selection operators need some TLC to work with the new encoding.
+
+\begin{minted}{python}
+    def deterministic_selection(population, size, func, cities, encoding='stack'):
+        """Deterministically select the most fit from the given population.
+
+        Use the given fitness function to rank the population, then pick
+        the next `size` of the population to move on. This assumes that,
+        for a problem without recombination, the mutated individuals have
+        been mixed in with the original population.
+
+        :param population: The population to cull.
+        :param size: The desired size of the population.
+        :param func: The fitness function to rank the population by.
+        :param cities: The array of city locations.
+        :returns: The culled population, sorted upwards in increasing fitness.
+        """
+        population.sort(key=lambda p: func(cities, p, encoding))
+        euthanize = len(population) - size
+        return population[euthanize:]
+\end{minted}
+
+\begin{minted}{python}
+    def stochastic_selection(population, size, func, cities, encoding='stack'):
+        """Randomly select the most fit from the given population.
+
+        Select without replacement an individual with probability
+        proportional to its fitness.
+
+        :param population: The population to cull.
+        :param size: The desired size of the population.
+        :param func: The fitness function to rank the population by.
+        :param cities: The array of city locations.
+        :returns: The culled population, unsorted.
+        """
+        fitnesses = np.array([func(cities, p, encoding) for p in population])
+        probabilities = fitnesses / np.sum(fitnesses)
+        survivors = np.random.choice(len(population), size, replace=False, p=probabilities)
+        return [population[i] for i in survivors]
+\end{minted}
+
+\begin{minted}{python}
+    def select(population, size, func, cities, method='deterministic', encoding='stack'):
+        """Select the `size` most fit from the given population.
+
+        :param population: The population to cull.
+        :param size: The desired size of the population.
+        :param func: The fitness function to rank the population by.
+        :param cities: The array of city locations.
+        :param method: One of 'deterministic' or 'stochastic'.
+        :param encoding: One of 'path' or 'stack'
+        :returns: The culled population, in arbitrary order.
+        """
+        methods = {
+            'stochastic': stochastic_selection,
+            'deterministic': deterministic_selection,
+        }
+        return methods[method](population, size, func, cities, encoding)
+\end{minted}
+
+\subsubsection{The Evolutionary Algorithm}
+The algorithm for this problem is not much different than that for \autoref{prob:2}. The biggest
+difference is the recombination.
+
+\begin{minted}{python}
+    def ea(cities, size, func, iters, selection='deterministic', encoding='stack'):
+        """Run the evolutionary algorithm to solve the TSP.
+
+        :param cities: The array of city locations.
+        :param size: The population size to use.
+        :param func: The fitness function to use.
+        :param iters: The number of generations to run.
+        :param selection: One of 'deterministic' or 'stochastic'.
+        :param encoding: One of 'path' or 'stack'. Determines recombination method.
+        """
+        n = len(cities)
+        population = generate_population(cities, size)
+        best_fitnesses = np.zeros(iters)
+        best_individuals = np.zeros((iters, n), dtype=int)
+        for i in range(iters):
+            population.sort(key=lambda p: func(cities, p, encoding))
+            population = population[n // 3:]
+            random.shuffle(population)
+
+            children = [recombine(mom, dad, encoding) for mom, dad in pairwise(population)]
+            mutations = [mutate(c) for c in population]
+            combined = population + children + mutations
+            population = select(combined, size, func, cities, method=selection, encoding=encoding)
+
+            fitnesses = np.array([func(cities, p, encoding) for p in population])
+            best = fitnesses.argmax()
+            best_fitnesses[i] = fitnesses[best]
+            best_individuals[i] = decode(population[best]) if encoding == 'stack' else population[best]
+        return best_fitnesses, best_individuals
+\end{minted}
+
+Notice that I am sorting the population by their fitness, and culling the bottom third before
+shuffling and recombining pairwise. This is one of the simple changes I made to get better results.
+
+\subsection{Results}
+The most surprising and discouraging\footnote{Like seriously; I didn't even want to turn the rest
+    of this in\dots} result was that I found my PMX recombination implementation
+buggy. On occasion, it results in a child with a duplicated city, but only ever on the second
+iteration of the evolutionary algorithm. This is frustrating, because I spent an inordinate amount
+of time attempting to, first understand the operator, second draw the nice pictures like
+\autoref{fig:prob3:pmx-step-3}, and third debug my implementation. This is particularly
+disappointing because I wanted very badly to compare the ordered-path based recombination operators
+to that of the simple splicing on the stack encoding.
+
+So unfortunately I was only able to compare the results of the stochastic and deterministic
+selection operators with only the stack encoding. As with \autoref{prob:2}, I first generated an
+array of cities, shown in \autoref{fig:prob3:city-locations}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics{prob3/figures/prob3-city-locations.pdf}
+    \caption{The city locations}\label{fig:prob3:city-locations}
+\end{figure}
+
+Both of the selection operators gave wildly varying results. However, the stochastic operator
+consistently beat the deterministic one, even if only by a tiny amount. Unfortunately, as
+\autoref{fig:prob3:deterministic-fitness} shows, the fitness of the best individual caps out
+relatively quickly, indicating that it is a locally optimal solution. This is unfortunate, because
+the mutation operator does not introduce enough variation to push the population away from the
+found solution.
+
+I experimented with other mutation operators, and surprisingly the swap mutation worked the best.
+With the stack encoding, I lack the intuitive understanding to understand what impact swapping two
+elements in the genome has on the actual ordering of the cities.
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{prob3/figures/prob3-fitness-deterministic-stack.pdf}
+        \caption{The best individual's fitness over time}\label{fig:prob3:deterministic-fitness}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{prob3/figures/prob3-best-deterministic-stack.pdf}
+        \caption{The overall best individual}\label{fig:prob3:deterministic-best}
+    \end{subfigure}
+    \caption{Results using deterministic selection}\label{fig:prob3:deterministic-results}
+\end{figure}
+
+Note also, from \autoref{fig:prob3:deterministic-best} that the best solution found is nowhere near
+as good as \textit{any} of the solutions given in \autoref{prob:2}. (I think) Even manual
+improvement of the solution would not beat those solutions.
+
+I expected the stochastic selection operator to fail like it did in \autoref{prob:2}, but it
+surprised me. Compare the population's best individual's fitness from
+\autoref{fig:prob2:stochastic-fitness} to that shown in \autoref{fig:prob3:stochastic-fitness}. In
+\autoref{fig:prob3:stochastic-fitness}, the fitness shows a steady climb, with several small peaks.
+In \autoref{fig:prob2:stochastic-fitness}, the fitness shows no observable trend.
+
+\begin{figure}[h]
+    \centering
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{prob3/figures/prob3-fitness-stochastic-stack.pdf}
+        \caption{The best individual's fitness over time}\label{fig:prob3:stochastic-fitness}
+    \end{subfigure}
+    \begin{subfigure}[b]{0.45\textwidth}
+        \includegraphics[width=\textwidth]{prob3/figures/prob3-best-stochastic-stack.pdf}
+        \caption{The overall best individual}\label{fig:prob3:stochastic-best}
+    \end{subfigure}
+    \caption{Results using stochastic selection}\label{fig:prob3:stochastic-results}
+\end{figure}
+
+However, the best individual found, shown in \autoref{fig:prob3:stochastic-best}, bears no visual
+improvement on that of the deterministic selection operator.
+
+Had I more time, I would be \textit{very} interested to see how the recombination operators
+from~\cite{tsp_ea} perform, especially the PMX crossover, which~\cite{tsp_ea} claims is the most
+common operator for path-based problems.
 
 \appendix\appendixpage{}\addappheadtotoc{}
 \section{Inversion Proof}\label{app:proof}
@@ -1425,13 +1726,13 @@ Since the best proofs are constructive, I thought I would get meta and programma
 proof that swaps, insertions, displacements, and shuffles can be implemented as a sequence of
 inversions.
 
-\inputminted{python}{proof.py}
-
 Unfortunately, I cannot claim to be the original author of such an excellent class of program. The
 inspiration came from a fellow sufferer of topology,
 \href{https://www.reddit.com/user/kwprules}{u/kwprules}, a year previous to my own suffering. The
 illuminated discussion on their proof technique may be found
 \href{https://www.reddit.com/r/math/comments/7gqhlc/what\_to\_say\_instead\_of\_trivially/}{here}.
+
+\inputminted{python}{proof.py}
 
 \bibliographystyle{ieeetr}
 \bibliography{../homework}{}
