@@ -1388,8 +1388,9 @@ It works as follows
 \end{enumerate}
 
 The second child $C_2$ is created in the same manner, with parents swapped. This crossover operator
-was surprisingly tricky to implement, and especially so with Numpy arrays over the usual Python
-lists due to missing functionality.
+was surprisingly tricky\footnote{Want to play a game? It's called ``Find The Bug'', and I hear
+    there's a prize this year.} to implement, and especially so with Numpy arrays over the usual
+Python lists due to missing functionality.
 
 \begin{minted}{python}
     def pmx(mom, dad):
@@ -1434,8 +1435,7 @@ lists due to missing functionality.
 \end{minted}
 
 \subsubsection{Order Crossover (OX)}
-\todoinline{I have run out of motivation. I'll implement the PMX crossover and the stack encoding,
-    but that's it.}
+Explanation, implementation, and analysis left as an exercise to the reader.
 \subsubsection{Maximal Preservative Crossover (MPX)}
 \subsubsection{Cycle Crossover (CX)}
 \subsubsection{Position Base Crossover (PBX)}
@@ -1443,7 +1443,7 @@ lists due to missing functionality.
 \subsubsection{Edge Recombination Crossover (ERX)}
 
 \subsubsection{Mutation and Recombination with the Stack Encoding}
-Given a genome encoded via the stack encoding, we can decode the corresponding phenome with
+Given a genome encoded via the stack encoding, we can decode the corresponding city ordering with
 \begin{minted}{python}
     def decode(n, genome):
         """Decode a given stack-encoded genome.
