@@ -9,8 +9,6 @@
 \begingroup
 \hypersetup{linkcolor=black}
 \tableofcontents
-% TODO: Remove this.
-\listoftodos
 \endgroup
 \newpage
 
@@ -399,8 +397,6 @@ solution out of $n$ runs of the algorithm, it's useful to plot the results of al
 same plot. \autoref{fig:prob1:iterated-hill-climbing-solutions} shows the results of the iterated
 hill climbing algorithm.
 
-\todoinline{Mention the sensitivity to the initial values.}
-
 \begin{figure}[h]
     \centering
     \includegraphics{prob1/figures/prob1-hill-climbing-solution.pdf}
@@ -457,8 +453,6 @@ converged to the same value.
 I eventually settled on an initial temperature of $0.01$ even though $0.002$ worked just as well,
 because an iterative algorithm that converges after only $15$ iterations isn't very exciting.
 
-\todoinline{Mention the sensitivity to the initial values.}
-
 \begin{figure}[h]
     \centering
     \includegraphics{prob1/figures/prob1-simulated-annealing-solutions.pdf}
@@ -488,8 +482,6 @@ In summary, I have several observations.
     \item Temperatures ranging from $8000$ to $0.002$ (because 0.001 is the convergence criterion)
           worked well, but smaller temperatures converged much faster.
 \end{itemize}
-
-\todoinline{Mention the sensitivity to the initial values.}
 
 \section{The TSP with Mutation Only}\label{prob:2}
 
@@ -872,8 +864,6 @@ and finally, a nice helper function
         return methods[method](population, size, func, cities)
 \end{minted}
 
-\todoinline{Consider modifying the stochastic selection so that it can't throw away the top few?}
-
 \subsubsection{The Evolutionary Algorithm}
 With all of the above snippets defined, implementing the evolutionary algorithm listed in
 \autoref{alg:standard-ea} (without recombination) can be done simply as
@@ -1105,11 +1095,6 @@ encoding that prevents crossover that creates an invalid candidate. As before, c
 deterministic and stochastic selection operators.
 
 \subsection{Method}
-\todoinline{
-    List recombination methods from~\cite{tsp_ea}.
-
-    Implement crossover.
-}
 As mentioned in \autoref{prob:2}, I found a paper~\cite{tsp_ea} listing many different mutation and
 recombination operators on the simple ordered-path encoding for a solution to the TSP. I used the
 same mutation and selection operators given in \autoref{sec:mutation-methods}. The interesting
