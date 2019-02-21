@@ -1,0 +1,3 @@
+[submodule "homework/hw2"]
+	path = homework/hw2
+	url = git@github.com:Notgnoshi/natural-computing-hw2.git
