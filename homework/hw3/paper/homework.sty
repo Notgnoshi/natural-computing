@@ -1,0 +1,119 @@
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage[titletoc]{appendix}
+\usepackage{array}
+\usepackage[english]{babel}
+\usepackage{booktabs}
+\usepackage{cancel}
+\usepackage{color}
+\usepackage{eqparbox}
+\usepackage{float}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\usepackage[colorlinks=true]{hyperref}
+% *must* be loaded after hyperref
+\usepackage[toc, acronym, numberedsection=nameref]{glossaries}
+\usepackage[utf8]{inputenc}
+\usepackage{lipsum}
+\usepackage{mathtools}
+\usepackage[cache=false]{minted}
+\usepackage{parskip}
+\usepackage{pgfplots}
+\usepackage{scalerel}
+\usepackage{skull}
+\usepackage{subcaption}
+\usepackage{titling}
+\usepackage{textcomp}
+\usepackage{tikz}
+\usepackage[compact, explicit]{titlesec}
+\usepackage{textcomp}
+\usepackage[nottoc]{tocbibind}
+\usepackage[textsize=small]{todonotes}
+\usepackage[normalem]{ulem}
+
+% Document Settings
+
+\definecolor{__minted_background_color}{rgb}{0.95, 0.95, 0.98}
+\definecolor{__minted_highlight_color}{rgb}{0.88, 0.88, 1.0}
+\setminted{autogobble=true,
+    style=tango,
+    breaklines,
+    bgcolor=__minted_background_color,
+    highlightcolor=__minted_highlight_color,
+    mathescape, % Escape math mode everywhere.
+    texcomments,  % Enable latex code inside of comments. Useful for referencing equations.
+}
+
+\usetikzlibrary{arrows, backgrounds, matrix, positioning, shapes}
+\pgfplotsset{compat=1.15}
+\numberwithin{equation}{section}
+% Sets the width of the margin TODO notes
+\setlength{\marginparwidth}{0.84in}
+\reversemarginpar{}
+
+% hex #184c9a
+\definecolor{__glossary_entry_color}{rgb}{0.094, 0.298, 0.604}
+\renewcommand{\glstextformat}[1]{\textbf{\textcolor{__glossary_entry_color}{#1}}}
+
+% Add glos: to the beginning of the glossary labels.
+\renewcommand*{\glsautoprefix}{glos:}
+
+% All I want is to have comment italicized, but I cant figure out how
+% to properly modify the existing \Comment macro.
+% \algrenewcomment[1]{\hfill\eqparbox{COMMENT}{\textit{// #1}}}
+\algnewcommand{\IComment}[1]{\Comment{\textit{#1}}}
+% enable \autoref with algorithms
+\newcommand{\algorithmautorefname}{Algorithm}
+
+% TODO: Should this path be relative to the document root or this file?
+\graphicspath{{./figures/}}
+
+% Document Definitions
+
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Z}{\mathbb{Z}}
+\newcommand{\N}{\mathbb{N}}
+\renewcommand{\O}{\mathcal{O}}
+
+\theoremstyle{definition}
+\newtheorem{defn}{Definition}[section]
+
+\theoremstyle{plain}
+\newtheorem{thm}{Theorem}[section]
+
+\renewcommand{\qedsymbol}{$\skull$}
+
+% An inline TODO command. Doesn't play nicely with \todotableofcontents
+\newcommand\todoinline[2][]{\todo[inline, caption={TODO}, #1]{
+        \begin{minipage}{\textwidth-4pt}#2\end{minipage}}}
+
+% Draw clouds around things. Useful in mathematical proofs.
+\newcommand{\cloud}[4][\dots]{
+    \raisebox{-0.4\height}{
+        \begin{tikzpicture}
+            \node [cloud,
+                draw,
+                cloud puffs=#2,
+                cloud ignores aspect,
+                minimum height=#3,
+                minimum width=#4] {#1};
+        \end{tikzpicture}
+    }
+}
+
+% % make each \section a problem.
+% \titleformat{\section}[runin]{\large\bfseries}{}{0pt}{\titlerule[1.5pt]\newline\vspace*{-4pt}
+%     Problem\quad\thesection\newline}[\vspace{0.01ex}{\titlerule[1.5pt]}]
+
+% Make autorefs to sections say "Problem x"
+% \AtBeginDocument{%
+% \renewcommand{\sectionautorefname}{Problem}
+% }
+
+% Use \ceil*{} or \floor*{}
+\DeclarePairedDelimiter{\ceil}{\lceil}{\rceil}
+\DeclarePairedDelimiter{\floor}{\lfloor}{\rfloor}
