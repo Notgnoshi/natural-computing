@@ -1,3 +1,6 @@
 [submodule "homework/hw2"]
 	path = homework/hw2
 	url = git@github.com:Notgnoshi/natural-computing-hw2.git
+[submodule "homework/hw3"]
+	path = homework/hw3
+	url = git@github.com:Notgnoshi/natural-computing-hw3.git
