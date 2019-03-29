@@ -14,7 +14,7 @@ I'm thinking a three-four part process to rendering the fractals.
 Run
 
 ```shell
-blender --background --python blender.py -- test.json
+blender --background --python blender.py -- data/test.json
 ```
 
 to create the `test.blend` file.
