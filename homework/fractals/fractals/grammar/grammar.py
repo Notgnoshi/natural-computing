@@ -1,3 +1,8 @@
+import itertools
+from multiprocessing.pool import ThreadPool
+from multiprocessing.pool import Pool as ProcPool
+
+
 class Grammar:
     """Apply production rules to strings."""
 
@@ -9,6 +14,8 @@ class Grammar:
         """
         self.productions = productions
         self.symbols = frozenset(filter(str.isalpha, productions.keys()))
+        # TODO: Determine if a process pool is faster.
+        self.pool = ThreadPool()
 
     def __check_text_symbols(self, text):
         """Ensure the given text contains only known symbols."""
@@ -16,12 +23,24 @@ class Grammar:
             if symbol not in self.symbols:
                 raise ValueError(f"Unknown symbol '{symbol}'")
 
+    @staticmethod
+    def _apply_symbol(args):
+        symbol, rules = args
+        return rules.get(symbol, symbol)
+
     def apply(self, text):
         """Apply the production rules to the given text."""
         self.__check_text_symbols(text)
-        return text
+
+        # Use a chunk size for efficiency with smaller text.
+        return "".join(
+            self.pool.imap(
+                self._apply_symbol, zip(text, itertools.repeat(self.productions)), chunksize=64
+            )
+        )
 
     def iapply(self, axiom):
         """Return an infinite iterator to apply the production rules to the given axiom."""
         while True:
+            axiom = self.apply(axiom)
             yield axiom
