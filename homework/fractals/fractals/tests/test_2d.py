@@ -5,6 +5,7 @@ import numpy as np
 from fractals.graphics import Graphics
 
 
+@unittest.skip("Cannot test until Turtle3D is finished.")
 class Test2DStraightSimple(unittest.TestCase):
     def setUp(self):
         self.start = np.array([0, 0, 0])
@@ -80,7 +81,6 @@ class Test2DStraightSimple(unittest.TestCase):
         expected["to"] = np.array([0, 0, 4 * self.unit])
         self.assertDictEqual(cylinders[0], expected)
 
-    @unittest.skip("Wait until MVP is finished.")
     def test_proportional_radius(self):
         # Make radius 10% of the length.
         p = 0.1
