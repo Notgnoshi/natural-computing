@@ -74,3 +74,11 @@ class GrammarTest(unittest.TestCase):
 
         for actual, expected in zip(g.iapply(axiom=self.tree_axiom), expecteds):
             self.assertEqual(actual, expected)
+
+    def test_large(self):
+        g = Grammar(productions={"a": "aa", "b": "bb"})
+        axiom = "a" * 2 + "b" * 2
+
+        for power, result in zip(range(2, 18), g.iapply(axiom)):
+            expected = "a" * (2 ** power) + "b" * (2 ** power)
+            self.assertEqual(result, expected)

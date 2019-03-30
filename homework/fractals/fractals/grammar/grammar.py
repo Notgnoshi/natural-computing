@@ -1,5 +1,4 @@
 import itertools
-from multiprocessing.pool import ThreadPool
 from multiprocessing.pool import Pool as ProcPool
 
 
@@ -14,8 +13,7 @@ class Grammar:
         """
         self.productions = productions
         self.symbols = frozenset(filter(str.isalpha, productions.keys()))
-        # TODO: Determine if a process pool is faster.
-        self.pool = ThreadPool()
+        self.pool = ProcPool()
 
     def __check_text_symbols(self, text):
         """Ensure the given text contains only known symbols."""
