@@ -1,5 +1,7 @@
 import numpy as np
 
+from .turtle3d import Turtle3D
+
 
 class Graphics:
     """Interprets Lindenmayer graphics command strings to generate 3D cylinders.
@@ -70,6 +72,8 @@ class Graphics:
         self.material = material
         self.radius = radius if radius is not None else 0.2
         self.proportion = proportion
+
+        self.turtle = Turtle3D(step=self.unit, angle=self.angle)
 
     def draw(self, commands):
         """Generate the 3D cylinders from the given graphics commands.
