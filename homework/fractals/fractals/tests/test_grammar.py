@@ -79,6 +79,6 @@ class GrammarTest(unittest.TestCase):
         g = Grammar(productions={"a": "aa", "b": "bb"})
         axiom = "a" * 2 + "b" * 2
 
-        for power, result in zip(range(2, 18), g.iapply(axiom)):
+        for power, result in zip(range(2, 16), g.iapply(axiom)):
             expected = "a" * (2 ** power) + "b" * (2 ** power)
             self.assertEqual(result, expected)
