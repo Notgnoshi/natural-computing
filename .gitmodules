@@ -4,3 +4,6 @@
 [submodule "homework/hw3"]
 	path = homework/hw3
 	url = git@github.com:Notgnoshi/natural-computing-hw3.git
+[submodule "homework/hw4"]
+	path = homework/hw4
+	url = git@github.com:macattackftw/fractal_trees.git
