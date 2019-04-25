@@ -23,5 +23,6 @@ view:
 
 # Sure, I could make them dependencies, or I could not.
 generate:
-	jupyter-nbconvert --execute --inplace prob1/prob1.ipynb
-	jupyter-nbconvert --execute --inplace prob2/prob2.ipynb
+	jupyter-nbconvert --ExecutePreprocessor.timeout=120 --execute --inplace prob1/prob1.ipynb
+	jupyter-nbconvert --ExecutePreprocessor.timeout=120 --execute --inplace prob2/prob2.ipynb
+	jupyter-nbconvert --ExecutePreprocessor.timeout=120 --execute --inplace prob3/prob3.ipynb
