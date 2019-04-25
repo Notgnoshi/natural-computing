@@ -1,5 +1,5 @@
 PROJECT_NAME := hw1
-SRC := $(shell find . -name '*.tex') ../homework.sty
+SRC := $(shell find . -name '*.tex') homework.sty
 
 .PHONY: $(PROJECT_NAME).pdf all clean view
 
